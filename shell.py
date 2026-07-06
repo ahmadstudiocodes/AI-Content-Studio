@@ -1,26 +1,33 @@
-from brain.personality import personality
-from core.command_processor import processor
+from core.dispatcher import dispatcher
 
 
-def shell():
+class Shell:
 
-    print(personality.introduce())
+    def start(self):
 
-    while True:
+        print()
 
-        cmd = input("Ahmad > ")
+        while True:
 
-        if cmd.lower() in ["exit", "quit"]:
+            try:
 
-            print("خداحافظ احمد ❤️")
+                command = input("Arman> ").strip()
 
-            break
+                if command == "":
+                    continue
 
-        result = processor.process(cmd)
+                if command.lower() in ["exit", "quit"]:
 
-        print(result)
+                    print("Goodbye Ahmad 👋")
+                    break
 
+                response = dispatcher.route(command)
 
-if __name__ == "__main__":
+                if response:
+                    print(response)
 
-    shell()
+            except KeyboardInterrupt:
+
+                print()
+                print("Goodbye Ahmad 👋")
+                break

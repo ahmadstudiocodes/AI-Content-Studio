@@ -1,21 +1,17 @@
-from agents.agent_manager import agent_manager
+from core.registry import registry
 
 
 class Dispatcher:
 
-    def dispatch(self,
+    def route(self, command):
 
-                 agent_name,
+        for agent in registry.all().values():
 
-                 task):
+            if agent.can_handle(command):
 
-        agent = agent_manager.get(agent_name)
+                return agent.handle(command)
 
-        if agent is None:
-
-            return None
-
-        return agent.run(task)
+        return f"Unknown Command : {command}"
 
 
 dispatcher = Dispatcher()
