@@ -18,7 +18,7 @@ class GeneralAgent(BaseAgent):
 
         ]
 
-    def handle(self, command):
+    def execute(self, command):
 
         if command.action == "سلام":
 

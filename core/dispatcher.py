@@ -9,7 +9,7 @@ class Dispatcher:
 
             if agent.can_handle(command):
 
-                return agent.handle(command)
+                return agent.execute(command)
 
         return f"Unknown Command : {command.raw}"
 
