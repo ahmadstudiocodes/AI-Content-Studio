@@ -11,7 +11,7 @@ class Dispatcher:
 
                 return agent.handle(command)
 
-        return f"Unknown Command : {command}"
+        return f"Unknown Command : {command.raw}"
 
 
 dispatcher = Dispatcher()

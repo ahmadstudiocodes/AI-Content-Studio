@@ -8,40 +8,47 @@ class GeneralAgent(BaseAgent):
 
     def can_handle(self, command):
 
-        cmd = command.lower()
+        return command.action in [
 
-        return cmd in [
             "سلام",
             "help",
-            "provider"
+            "provider",
+            "task",
+            "plan"
+
         ]
 
     def handle(self, command):
 
-        cmd = command.lower()
-
-        if cmd == "سلام":
+        if command.action == "سلام":
 
             provider = provider_manager.default()
 
             return provider.generate("سلام احمد 🌱")
 
-        if cmd == "help":
+        if command.action == "provider":
+
+            provider = provider_manager.default()
+
+            return f"Current Provider : {provider.name}"
+
+        if command.action == "help":
 
             return (
                 "\n"
                 "Commands\n"
                 "----------------\n"
                 "help\n"
-                "exit\n"
-                "سلام\n"
                 "provider\n"
+                "task\n"
+                "plan\n"
+                "exit\n"
             )
 
-        if cmd == "provider":
+        if command.action == "task":
 
-            provider = provider_manager.default()
+            return str(command.task)
 
-            return f"Current Provider : {provider.name}"
+       
 
         return None

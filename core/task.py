@@ -1,34 +1,31 @@
-from dataclasses import dataclass
-from datetime import datetime
-import uuid
-
-
-@dataclass
 class Task:
 
-    id: str
+    def __init__(self):
 
-    name: str
+        self.action = ""
 
-    payload: dict
+        self.domain = ""
 
-    status: str
+        self.target = ""
 
-    created: str
+        self.arguments = []
 
-    @classmethod
-    def create(cls, name, payload):
+        self.priority = "normal"
 
-        return cls(
+        self.provider = "auto"
 
-            id=str(uuid.uuid4()),
+        self.need_memory = False
 
-            name=name,
+        self.status = "pending"
 
-            payload=payload,
+        self.result = None
 
-            status="waiting",
+    def __str__(self):
 
-            created=datetime.now().isoformat()
-
+        return (
+            f"Task("
+            f"action={self.action}, "
+            f"domain={self.domain}, "
+            f"target={self.target}, "
+            f"status={self.status})"
         )
