@@ -15,6 +15,9 @@ class TaskBuilder:
 
         task.arguments = command.args
 
+        # Sprint 9
+        task.payload = command.payload
+
         task.priority = command.intent.priority
 
         task.provider = command.intent.provider

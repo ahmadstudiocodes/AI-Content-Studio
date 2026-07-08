@@ -10,6 +10,9 @@ class Task:
 
         self.arguments = []
 
+        # Sprint 9
+        self.payload = None
+
         self.priority = "normal"
 
         self.provider = "auto"

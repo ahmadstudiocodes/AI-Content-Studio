@@ -22,7 +22,8 @@ class IntentEngine:
             "youtube",
             "shorts",
             "video",
-            "script"
+            "script",
+            "thumbnail"
         ]
 
         finance = [
@@ -46,6 +47,11 @@ class IntentEngine:
         else:
 
             intent.domain = "general"
+
+        # اطلاعات خام Command را نیز نگه می‌داریم
+        intent.target = command.target
+        intent.payload = command.payload
+        intent.args = command.args
 
         return intent
 

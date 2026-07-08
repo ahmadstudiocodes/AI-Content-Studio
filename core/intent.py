@@ -13,3 +13,8 @@ class Intent:
         self.need_memory = False
 
         self.metadata = {}
+
+        # Sprint 9
+        self.target = ""
+        self.args = []
+        self.payload = None

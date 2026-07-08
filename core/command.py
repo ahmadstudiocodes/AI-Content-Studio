@@ -9,16 +9,13 @@ class Command:
         if not parts:
 
             self.action = ""
-
             self.target = ""
-
             self.args = []
 
             self.intent = None
-
             self.task = None
-
             self.plan = None
+            self.payload = None
 
             return
 
@@ -28,4 +25,10 @@ class Command:
 
         self.args = parts[2:]
 
+        # برای Agentها
+        self.payload = " ".join(self.args) if self.args else None
+
+        # مراحل Pipeline
         self.intent = None
+        self.task = None
+        self.plan = None
