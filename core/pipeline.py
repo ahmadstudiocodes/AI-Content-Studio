@@ -4,10 +4,12 @@ from brain.controller import controller
 
 from core.output_cleaner import OutputCleaner
 from core.validator import Validator
-from core.quality_evaluator import quality_evaluator
+from core.quality_evaluator import QualityEvaluator
+from core.retry_engine import retry_engine
 
 
 class ExecutionPipeline:
+
     """
     Main Execution Pipeline
 
@@ -19,61 +21,78 @@ class ExecutionPipeline:
         ↓
     Validator
         ↓
-    Quality Evaluator
+    Quality
         ↓
-    Retry / Success
+    Retry
+        ↓
+    Success
     """
 
     def __init__(self):
 
         self.validator = Validator()
+        self.quality = QualityEvaluator()
 
     def execute(
         self,
         command
     ):
 
-        if command.plan:
-
-            command.plan.status = "running"
+        command.plan.status = "running"
 
         try:
 
             # ----------------------------------
-            # Brain
+            # Worker
             # ----------------------------------
 
-            result = controller.execute(
-                command
+            def worker():
+
+                result = controller.execute(
+                    command
+                )
+
+                cleaned = OutputCleaner.clean(
+                    result
+                )
+
+                return cleaned
+
+            # ----------------------------------
+            # Retry Engine
+            # ----------------------------------
+
+            retry_result = retry_engine.execute(
+
+                worker=worker,
+
+                validator=self.validator,
+
+                task=command.action,
+
+                topic=command.payload or ""
+
+            )
+
+            cleaned = retry_result["output"]
+
+            validation = retry_result["validation"]
+
+            # ----------------------------------
+            # Quality Evaluation
+            # ----------------------------------
+
+            quality = self.quality.evaluate(
+                cleaned
             )
 
             # ----------------------------------
-            # Clean Output
+            # Retry Required
             # ----------------------------------
-
-            cleaned = OutputCleaner.clean(
-                result
-            )
-
-            # ----------------------------------
-            # Validator
-            # ----------------------------------
-
-            validation = self.validator.validate(
-
-                cleaned,
-
-                command.action,
-
-                command.payload
-
-            )
 
             if validation.get("retry"):
 
-                if command.plan:
-
-                    command.plan.status = "retry_required"
+                command.plan.status = "retry_required"
 
                 return {
 
@@ -81,41 +100,15 @@ class ExecutionPipeline:
 
                     "validation": validation,
 
-                    "quality": None,
+                    "quality": quality,
 
                     "status": "retry_required"
 
                 }
 
-            # ----------------------------------
-            # Determine Agent Type
-            # ----------------------------------
-
-            agent_type = command.target.lower()
-
-            if not agent_type:
-
-                agent_type = command.action.lower()
-
-            # ----------------------------------
-            # Quality Evaluation
-            # ----------------------------------
-
-            quality = quality_evaluator.evaluate(
-
-                cleaned,
-
-                agent_type,
-
-                command.payload
-
-            )
-
             if quality.get("retry"):
 
-                if command.plan:
-
-                    command.plan.status = "retry_required"
+                command.plan.status = "retry_required"
 
                 return {
 
@@ -133,9 +126,7 @@ class ExecutionPipeline:
             # Success
             # ----------------------------------
 
-            if command.plan:
-
-                command.plan.complete()
+            command.plan.complete()
 
             return {
 
@@ -153,9 +144,7 @@ class ExecutionPipeline:
 
             traceback.print_exc()
 
-            if command.plan:
-
-                command.plan.status = "failed"
+            command.plan.status = "failed"
 
             return {
 
@@ -177,7 +166,21 @@ class ExecutionPipeline:
 
                 },
 
-                "quality": None,
+                "quality": {
+
+                    "score": 0,
+
+                    "passed": False,
+
+                    "retry": True,
+
+                    "issues": [
+
+                        str(e)
+
+                    ]
+
+                },
 
                 "status": "failed"
 

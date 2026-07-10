@@ -1,5 +1,6 @@
 from core.dispatcher import dispatcher
 from brain.executive_memory import executive_memory
+from brain.context_compressor import context_compressor
 
 
 class TaskRouter:
@@ -7,9 +8,11 @@ class TaskRouter:
     """
     Workflow Task Router
 
-    Task
+    Workflow
         ↓
-    Internal Command
+    Compress Context
+        ↓
+    Build Internal Command
         ↓
     Dispatcher
         ↓
@@ -19,7 +22,8 @@ class TaskRouter:
     def route(
         self,
         task,
-        original_command
+        original_command,
+        context=None
     ):
 
         task_name = task.name
@@ -28,22 +32,17 @@ class TaskRouter:
             f"[TASK ROUTER] {task_name}"
         )
 
-        executive_memory.add_task(
-            task
-        )
+        executive_memory.add_task(task)
 
         command = self.create_command(
             task_name,
-            original_command
+            original_command,
+            context
         )
 
-        result = dispatcher.route(
-            command
-        )
+        result = dispatcher.route(command)
 
-        executive_memory.complete_task(
-            task
-        )
+        executive_memory.complete_task(task)
 
         return result
 
@@ -52,12 +51,11 @@ class TaskRouter:
     def create_command(
         self,
         task_name,
-        original_command
+        original_command,
+        context=None
     ):
 
-        target = self.detect_target(
-            task_name
-        )
+        target = self.detect_target(task_name)
 
         domain = getattr(
             original_command.intent,
@@ -74,29 +72,54 @@ class TaskRouter:
         class Plan:
 
             def __init__(self):
-
                 self.status = "idle"
 
             def complete(self):
-
                 self.status = "completed"
 
         class InternalCommand:
-
             pass
 
         cmd = InternalCommand()
 
         cmd.raw = task_name
-
         cmd.action = task_name
-
         cmd.target = target
 
-        cmd.payload = original_command.payload
+        # --------------------------
+        # Smart Context Compression
+        # --------------------------
+
+        if context:
+
+            compressed = context_compressor.compress(
+                context,
+                target
+            )
+
+            print(
+                f"[CONTEXT] target={target} | size={len(compressed)} chars"
+            )
+
+            cmd.payload = f"""
+Original User Request:
+
+{original_command.payload[:800]}
+
+Previous Agent Result:
+
+{compressed}
+"""
+
+        else:
+
+            print(
+                "[CONTEXT] No previous context"
+            )
+
+            cmd.payload = original_command.payload[:800]
 
         cmd.intent = intent
-
         cmd.plan = Plan()
 
         return cmd
@@ -128,7 +151,7 @@ class TaskRouter:
         if "publish" in text:
             return "publish"
 
-        return "unknown"
+        return "general"
 
 
 task_router = TaskRouter()

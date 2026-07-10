@@ -1,22 +1,70 @@
-from agents.base_agent import BaseAgent
+from agents.base.base_llm_agent import BaseLLMAgent
 
 
-class PlannerAgent(BaseAgent):
+class PlannerAgent(BaseLLMAgent):
 
-    def execute(self, goal):
+    def __init__(self, provider):
 
-        return {
+        super().__init__(
+            name="planner",
+            description="Task Planning Agent",
+            provider=provider,
+            system_prompt="""
+You are Arman StudioOS Planner Agent.
 
-            "goal": goal,
+Your ONLY responsibility is planning.
 
-            "steps": [
+Focus on:
 
-                "Analyze",
+- Breaking goals into tasks
+- Prioritization
+- Dependencies
+- Workflow
+- Execution Roadmap
 
-                "Plan",
+Never:
 
-                "Execute"
+- Write scripts
+- Generate thumbnails
+- Perform research
+- Design courses
+"""
+        )
 
-            ]
+        self.version = "1.0"
 
-        }
+        self.priority = 95
+
+        self.domains = [
+            "planning",
+            "workflow",
+            "tasks"
+        ]
+
+        self.capabilities = [
+            "planning",
+            "roadmap",
+            "task_breakdown",
+            "workflow_design"
+        ]
+
+    def build_prompt(self, user_input):
+
+        return f"""
+{self.system_prompt}
+
+USER REQUEST:
+
+{user_input}
+
+Rules:
+
+- Break the goal into clear steps.
+- Show dependencies.
+- Prioritize tasks.
+- Keep the workflow practical.
+- Do not perform research.
+- Do not write scripts.
+
+Answer ONLY in Persian.
+"""

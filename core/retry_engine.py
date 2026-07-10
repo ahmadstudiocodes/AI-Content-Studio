@@ -10,6 +10,12 @@ class RetryEngine:
 
         self.max_retries = max_retries
 
+        self.retry_prompt = (
+            "\n\nPrevious output failed validation.\n"
+            "Fix every reported issue.\n"
+            "Return ONLY the corrected final answer.\n"
+        )
+
     def execute(
         self,
         worker,
@@ -45,8 +51,18 @@ class RetryEngine:
                     "valid": False,
                     "retry": attempt <= self.max_retries,
                     "reason": "WORKER_EXCEPTION",
-                    "errors": [str(e)]
+                    "errors": [
+                        str(e)
+                    ]
                 }
+
+                print(
+                    f"[RETRY] Attempt {attempt}/{self.max_retries + 1}"
+                )
+
+                print(
+                    f"[RETRY] Result : {last_validation['reason']}"
+                )
 
                 if not last_validation["retry"]:
                     break
@@ -59,6 +75,14 @@ class RetryEngine:
                 output=output,
                 task=task,
                 topic=topic
+            )
+
+            print(
+                f"[RETRY] Attempt {attempt}/{self.max_retries + 1}"
+            )
+
+            print(
+                f"[RETRY] Result : {last_validation['reason']}"
             )
 
             if last_validation["valid"]:
@@ -79,3 +103,6 @@ class RetryEngine:
             "output": last_output,
             "validation": last_validation
         }
+
+
+retry_engine = RetryEngine()

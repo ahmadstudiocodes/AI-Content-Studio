@@ -1,48 +1,177 @@
-from agents.base_agent import BaseAgent
-from providers.provider_manager import provider_manager
+from agents.base.base_llm_agent import BaseLLMAgent
 
 
-class YouTubeAgent(BaseAgent):
-
-    name = "youtube"
-
-    version = "1.1"
-
-    description = "YouTube Content Generator"
+class YouTubeAgent(BaseLLMAgent):
 
 
-    def can_handle(self, command):
+    def __init__(self, provider):
 
-        return (
-            command.intent.domain == "youtube"
-            and command.action == "generate"
-            and command.target == "youtube"
+        super().__init__(
+            name="youtube",
+            description="Professional YouTube Content Generator",
+            provider=provider,
+            system_prompt="""
+You are Arman StudioOS YouTube Content Agent.
+
+You are an expert YouTube strategist specialized in:
+- 3ds Max
+- Architecture Visualization
+- V-Ray Rendering
+- CGI Production
+
+Your goal is creating professional YouTube content plans.
+"""
         )
 
 
-    def execute(self, command):
+        self.version = "1.5"
 
-        provider = provider_manager.default()
+        self.priority = 50
 
-        prompt = f"""
-You are Arman StudioOS YouTube Content Agent.
 
-User Request:
-{command.payload}
+        self.domains = [
+            "youtube",
+            "video",
+            "content"
+        ]
 
-Create a professional YouTube content package.
 
-Include:
+        self.capabilities = [
+            "generate",
+            "title",
+            "script",
+            "thumbnail",
+            "seo"
+        ]
 
-1. Video Title
-2. Strong Hook for first 10 seconds
-3. Video structure
-4. Script outline
-5. Scene suggestions
-6. Thumbnail idea
-7. SEO keywords
 
-Answer in Persian.
+
+        self.channel_profile = """
+
+Channel Name:
+Easy Max / Arman StudioOS
+
+
+Main Niche:
+
+- 3ds Max Advanced Modeling
+- Architecture Visualization
+- V-Ray Rendering
+- CGI Production
+- Professional 3D Tutorials
+
+
+Audience:
+
+- Architects
+- Interior Designers
+- 3D Artists
+- Architecture Students
+- Visualization Professionals
+
+
+Content Style:
+
+- Professional
+- Technical
+- Advanced
+- Practical
+- Project Based
+
+
+Avoid:
+
+- Generic AI topics
+- Beginner tutorials
+- Unrelated technology
+- Motivational content
+
+
+Focus:
+
+- Advanced Modeling
+- Rendering
+- V-Ray
+- Architecture
+- Visualization
+- Professional Workflow
+
 """
 
-        return provider.generate(prompt)
+
+
+    def build_prompt(self, user_input):
+
+        return f"""
+
+{self.channel_profile}
+
+
+USER REQUEST:
+
+{user_input}
+
+
+
+RULES:
+
+
+LANGUAGE:
+
+- Answer ONLY in Persian.
+
+
+CONTENT:
+
+- Stay inside the channel niche.
+- Create realistic professional ideas.
+- Avoid fake technical information.
+- Avoid outdated software versions.
+- Do not invent unknown V-Ray or 3ds Max features.
+
+
+
+FORMAT:
+
+You MUST complete all 7 sections.
+
+Never stop before section 7.
+
+Keep every section concise.
+
+Maximum:
+- Title: 1 option
+- Hook: maximum 3 lines
+- Structure: maximum 6 bullet points
+- Script Outline: maximum 8 bullet points
+- Scene Suggestions: maximum 5 bullet points
+- Thumbnail Concept: maximum 5 bullet points
+- SEO Keywords: maximum 10 keywords
+
+
+
+OUTPUT:
+
+
+1. SEO Optimized Video Title
+
+
+2. Powerful Hook (10 seconds)
+
+
+3. Video Structure with timing
+
+
+4. Script Outline
+
+
+5. Scene Suggestions
+
+
+6. Thumbnail Concept
+
+
+7. SEO Keywords and Tags
+
+
+"""

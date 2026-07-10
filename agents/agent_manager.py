@@ -4,6 +4,7 @@ import inspect
 
 from agents.base_agent import BaseAgent
 from core.registry import registry
+from providers.local_provider import LocalProvider
 
 
 class AgentManager:
@@ -12,11 +13,7 @@ class AgentManager:
 
         self.agents = {}
 
-        self.enabled_agents = [
-            "thumbnail",
-            "youtube",
-            "architecture"
-        ]
+        self.provider = LocalProvider()
 
     def register(self, agent):
 
@@ -24,24 +21,21 @@ class AgentManager:
 
         self.agents[name] = agent
 
-        registry.register(
-            name,
-            agent
-        )
+        registry.register(name, agent)
 
     def unregister(self, name):
 
-        self.agents.pop(name.lower(), None)
+        name = name.lower()
+
+        self.agents.pop(name, None)
 
         registry.unregister(name)
-
-    def exists(self, name):
-
-        return name.lower() in self.agents
 
     def discover(self):
 
         agents_path = Path(__file__).parent
+
+        loaded = 0
 
         for file in agents_path.glob("*_agent.py"):
 
@@ -63,21 +57,28 @@ class AgentManager:
                         and obj is not BaseAgent
                     ):
 
-                        agent = obj()
+                        try:
+                            agent = obj(self.provider)
+                        except TypeError:
+                            agent = obj()
 
-                        if agent.name in self.enabled_agents:
+                        self.register(agent)
 
-                            self.register(agent)
+                        loaded += 1
 
-                            print(
-                                f"[AGENT MANAGER] Loaded: {agent.name}"
-                            )
+                        print(
+                            f"[AGENT MANAGER] Loaded: {agent.name}"
+                        )
 
             except Exception as e:
 
                 print(
                     f"[AGENT MANAGER] Failed {module_name}: {e}"
                 )
+
+        print(
+            f"[AGENT MANAGER] Total: {loaded}"
+        )
 
     def get(self, name):
 
@@ -103,7 +104,6 @@ class AgentManager:
 
         return {
             "count": self.count(),
-            "enabled": self.enabled_agents,
             "loaded": self.list()
         }
 

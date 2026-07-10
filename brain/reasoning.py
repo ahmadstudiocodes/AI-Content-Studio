@@ -29,6 +29,7 @@ class ReasoningEngine:
 
     ]
 
+
     def think(self, command):
 
         # --------------------------------
@@ -37,13 +38,21 @@ class ReasoningEngine:
 
         parts = []
 
+
         if command.action:
             parts.append(command.action)
+
 
         if command.target:
             parts.append(command.target)
 
-        payload = command.payload.strip()
+
+        # SAFE PAYLOAD HANDLING
+        payload = (
+            command.payload or ""
+        ).strip()
+
+
 
         if (
             command.target
@@ -56,10 +65,16 @@ class ReasoningEngine:
                 len(command.target):
             ].strip()
 
+
+
         if payload:
             parts.append(payload)
 
+
+
         text = " ".join(parts).lower()
+
+
 
         # --------------------------------
         # Complexity Detection
@@ -72,6 +87,8 @@ class ReasoningEngine:
             for keyword in self.COMPLEX_KEYWORDS
 
         )
+
+
 
         if is_complex:
 
@@ -91,6 +108,8 @@ class ReasoningEngine:
 
             )
 
+
+
         return ReasoningResult(
 
             goal=text,
@@ -106,6 +125,7 @@ class ReasoningEngine:
             execution=ExecutionMode.DIRECT
 
         )
+
 
 
 reasoning = ReasoningEngine()

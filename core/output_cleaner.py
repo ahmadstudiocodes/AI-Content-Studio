@@ -3,9 +3,17 @@ import re
 
 
 class OutputCleaner:
+    """
+    Central LLM Output Cleaner
+
+    Cleans responses from all agents
+    before validation and user output.
+    """
+
 
     @staticmethod
     def clean(output):
+
 
         # ----------------------------------
         # Dictionary
@@ -13,7 +21,7 @@ class OutputCleaner:
 
         if isinstance(output, dict):
 
-            return json.dumps(
+            output = json.dumps(
 
                 output,
 
@@ -23,11 +31,12 @@ class OutputCleaner:
 
             )
 
+
         # ----------------------------------
         # List / Tuple
         # ----------------------------------
 
-        if isinstance(
+        elif isinstance(
 
             output,
 
@@ -35,7 +44,7 @@ class OutputCleaner:
 
         ):
 
-            return json.dumps(
+            output = json.dumps(
 
                 output,
 
@@ -45,27 +54,24 @@ class OutputCleaner:
 
             )
 
+
         # ----------------------------------
         # Other Objects
         # ----------------------------------
 
-        if not isinstance(
-
-            output,
-
-            str
-
-        ):
+        elif not isinstance(output, str):
 
             output = str(output)
 
+
+
         # ----------------------------------
-        # Remove Markdown Blocks
+        # Remove Qwen Thinking
         # ----------------------------------
 
         output = re.sub(
 
-            r"```.*?```",
+            r"<think>.*?</think>",
 
             "",
 
@@ -75,18 +81,98 @@ class OutputCleaner:
 
         )
 
+
+        output = output.replace(
+
+            "<think>",
+
+            ""
+
+        )
+
+
+        output = output.replace(
+
+            "</think>",
+
+            ""
+
+        )
+
+
+
         # ----------------------------------
-        # Remove Extra Empty Lines
+        # Remove Markdown Code Blocks
         # ----------------------------------
 
         output = re.sub(
 
-            r"\n\s*\n\s*\n+",
+            r"```[\s\S]*?```",
+
+            "",
+
+            output
+
+        )
+
+
+
+        # ----------------------------------
+        # Remove common LLM artifacts
+        # ----------------------------------
+
+        forbidden_patterns = [
+
+            "I need to think",
+
+            "Let's analyze",
+
+            "I will reason",
+
+            "در حال فکر کردن",
+
+            "تحلیل داخلی"
+
+        ]
+
+
+        for pattern in forbidden_patterns:
+
+            output = output.replace(
+
+                pattern,
+
+                ""
+
+            )
+
+
+
+        # ----------------------------------
+        # Fix spacing
+        # ----------------------------------
+
+        output = re.sub(
+
+            r"\n{3,}",
 
             "\n\n",
 
             output
 
         )
+
+
+        output = re.sub(
+
+            r"[ \t]{2,}",
+
+            " ",
+
+            output
+
+        )
+
+
 
         return output.strip()

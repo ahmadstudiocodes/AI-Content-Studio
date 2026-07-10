@@ -3,37 +3,80 @@ import re
 
 class Validator:
     """
-    Validator for Arman StudioOS
+    Arman StudioOS Output Validator
 
-    Validates LLM outputs before they are returned
-    to the user.
+    Checks output health only.
+    Content quality will be handled
+    by Quality Evaluator later.
     """
+
+
 
     def __init__(self):
 
+
         self.forbidden_patterns = [
 
+
+            # Qwen / LLM thinking tags
+
             r"<think>",
+
             r"</think>",
+
             r"<thinking>",
+
             r"</thinking>",
 
+
+            # Analysis leaks
+
             r"Thinking:",
+
             r"Reasoning:",
+
             r"Internal reasoning",
+
             r"Chain of Thought",
+
             r"analysis:",
+
+            r"</analysis>",
+
+
+            # Common model leaks
+
             r"Let's think",
+
             r"I will think",
+
+            r"I need to analyze",
+
+            r"My reasoning is",
+
+            r"من فکر می‌کنم",
+
+            r"تحلیل داخلی",
+
+            r"فرآیند فکر کردن",
+
 
         ]
 
+
+
     def validate(
+
         self,
+
         output: str,
+
         task: str = "",
+
         topic: str = ""
+
     ):
+
 
         errors = []
 
@@ -41,97 +84,122 @@ class Validator:
 
         reason = "VALID"
 
+
+
+        # -----------------------------
+        # None
+        # -----------------------------
+
         if output is None:
 
             return {
+
                 "valid": False,
+
                 "retry": True,
+
                 "reason": "EMPTY_OUTPUT",
+
                 "errors": [
+
                     "Output is None."
+
                 ]
+
             }
+
+
 
         output = str(output)
 
-        if output.strip() == "":
+
+
+        # -----------------------------
+        # Empty
+        # -----------------------------
+
+
+        if not output.strip():
 
             return {
+
                 "valid": False,
+
                 "retry": True,
+
                 "reason": "EMPTY_OUTPUT",
+
                 "errors": [
+
                     "Output is empty."
+
                 ]
+
             }
+
+
+
+        # -----------------------------
+        # Forbidden patterns
+        # -----------------------------
+
 
         for pattern in self.forbidden_patterns:
 
+
             if re.search(
+
                 pattern,
+
                 output,
+
                 flags=re.IGNORECASE
+
             ):
 
+
                 errors.append(
+
                     f"Forbidden pattern detected: {pattern}"
+
                 )
 
+
+
         if errors:
+
 
             retry = True
 
             reason = "FORBIDDEN_PATTERN"
 
-        if topic:
 
-            topic_words = [
 
-                w.lower()
+        # -----------------------------
+        # Minimum length
+        # -----------------------------
 
-                for w in topic.split()
 
-                if len(w) > 2
+        if len(output.strip()) < 20:
 
-            ]
-
-            if topic_words:
-
-                found = False
-
-                lower_output = output.lower()
-
-                for word in topic_words:
-
-                    if word in lower_output:
-
-                        found = True
-
-                        break
-
-                if not found:
-
-                    errors.append(
-                        "Topic not detected in output."
-                    )
-
-                    if not retry:
-
-                        retry = True
-                        reason = "TOPIC_MISSING"
-
-        if len(output.strip()) < 5:
 
             errors.append(
+
                 "Output too short."
+
             )
+
 
             if not retry:
 
                 retry = True
+
                 reason = "OUTPUT_TOO_SHORT"
 
+
+
         return {
+
 
             "valid": len(errors) == 0,
 
@@ -141,4 +209,9 @@ class Validator:
 
             "errors": errors
 
+
         }
+
+
+
+validator = Validator()

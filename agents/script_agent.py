@@ -1,44 +1,93 @@
-from agents.base_agent import BaseAgent
-from providers.provider_manager import provider_manager
+from agents.base.base_llm_agent import BaseLLMAgent
 
 
-class ScriptAgent(BaseAgent):
+class ScriptAgent(BaseLLMAgent):
 
-    name = "script"
+    def __init__(self, provider):
 
-    version = "1.0"
-
-    description = "AI YouTube Script Generator"
-
-    def can_handle(self, command):
-
-        return (
-            command.intent.domain == "youtube"
-            and command.target == "script"
-        )
-
-    def execute(self, command):
-
-        provider = provider_manager.default()
-
-        prompt = f"""
+        super().__init__(
+            name="script",
+            description="Professional YouTube Lesson Script Agent",
+            provider=provider,
+            system_prompt="""
 You are Arman StudioOS Script Agent.
 
-Create a professional YouTube video script.
+Your ONLY responsibility is writing complete lesson scripts.
 
-Topic:
-{command.payload}
+You NEVER create:
+- YouTube ideas
+- Video titles
+- SEO
+- Thumbnails
+- Content plans
 
-Generate:
+Those belong to YouTubeAgent.
 
-1. Video Title
-2. Opening Hook (first 10 seconds)
-3. Full narration script
-4. Scene by scene breakdown
-5. Visual suggestions
-6. Ending call to action
-
-Answer in Persian.
+You ONLY write the final lesson script based on an existing topic or plan.
 """
+        )
 
-        return provider.generate(prompt)
+        self.version = "3.2"
+
+        # پایین‌تر از YouTubeAgent
+        self.priority = 25
+
+        # عمداً youtube حذف شده
+        self.domains = [
+            "script",
+            "lesson",
+            "course",
+            "training",
+            "education",
+            "narration"
+        ]
+
+        self.capabilities = [
+            "lesson_script",
+            "course_script",
+            "training_script",
+            "narration",
+            "voiceover"
+        ]
+
+    def build_prompt(self, user_input):
+
+        return f"""
+You are Arman StudioOS Script Agent.
+
+Write ONE complete YouTube lesson script.
+
+Previous Context:
+
+{user_input}
+
+Rules:
+
+- Do NOT generate YouTube ideas.
+- Do NOT generate titles.
+- Do NOT generate SEO.
+- Do NOT generate thumbnails.
+- Do NOT redesign the course.
+- Write ONE complete lesson only.
+- Focus on audience retention.
+- Answer ONLY in Persian.
+
+Return ONLY:
+
+# Video Title
+
+# Opening Hook
+
+# Introduction
+
+# Main Content
+
+For every section include:
+
+- Narration
+- Visual Suggestion
+
+# Call To Action
+
+# Ending
+"""

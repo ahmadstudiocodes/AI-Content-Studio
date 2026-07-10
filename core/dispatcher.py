@@ -2,96 +2,64 @@ from core.registry import registry
 from core.scorer import AgentScorer
 
 
-
 class Dispatcher:
-
 
     def __init__(self):
 
         self.scorer = AgentScorer()
 
-
-
     def route(self, command):
 
+        agents = list(registry.all().values())
 
-        available_agents = registry.all().values()
-
+        if not agents:
+            return f"No agents registered."
 
         candidates = []
 
-
-
-        for agent in available_agents:
-
+        for agent in agents:
 
             try:
 
-                if agent.can_handle(command):
+                score = self.scorer.score(
+                    agent,
+                    command
+                )
 
-                    candidates.append(agent)
+                if score > 0:
 
+                    candidates.append(
+                        (
+                            score,
+                            agent
+                        )
+                    )
 
-            except Exception:
+            except Exception as e:
 
-                continue
-
-
-
+                print(
+                    f"[DISPATCHER] {agent.name}: {e}"
+                )
 
         if not candidates:
 
-            return f"Unknown Command : {command.raw}"
-
-
-
-
-
-        ranked_agents = []
-
-
-
-        for agent in candidates:
-
-
-            score = self.scorer.score(
-                agent,
-                command
+            return (
+                f"Unknown Command : "
+                f"{command.raw}"
             )
 
-
-            ranked_agents.append(
-                (agent, score)
-            )
-
-
-
-
-
-        ranked_agents.sort(
-            key=lambda x:x[1],
-            reverse=True
+        candidates.sort(
+            reverse=True,
+            key=lambda x: x[0]
         )
 
-
-
-        selected_agent = ranked_agents[0][0]
-
-
+        score, agent = candidates[0]
 
         print(
-            f"[DISPATCHER] Selected: {selected_agent.name}"
+            f"\n[DISPATCHER] Selected: {agent.name} ({score})\n"
         )
 
-        print(
-            f"[DISPATCHER] Score: {ranked_agents[0][1]}"
-        )
-
-
-
-        return selected_agent.execute(command)
-
-
+        return agent.run(command.payload or command.raw)
 
 
 dispatcher = Dispatcher()

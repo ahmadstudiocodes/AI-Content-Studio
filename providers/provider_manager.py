@@ -14,11 +14,23 @@ class ProviderManager:
 
     def default(self):
 
-        for provider in self.providers.values():
+        print("\n========== PROVIDERS ==========")
 
-            if provider.available():
+        for name, provider in self.providers.items():
+
+            status = provider.available()
+
+            print(
+                f"{name:<10} -> {'ONLINE' if status else 'OFFLINE'}"
+            )
+
+            if status:
+
+                print("===============================\n")
 
                 return provider
+
+        print("===============================\n")
 
         return None
 

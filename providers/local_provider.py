@@ -1,87 +1,196 @@
-from providers.base_provider import BaseProvider
-from ollama import Client
-import re
+import requests
+import time
 
 
-class LocalProvider(BaseProvider):
+class LocalProvider:
 
-    name = "local"
+    """
+    Local LLM Provider for Arman StudioOS
 
-    def __init__(self, model="qwen3:4b"):
+    Optimized for agent execution.
+    """
+
+
+    def __init__(
+        self,
+        model="qwen3:4b",
+        host="http://localhost:11434"
+    ):
+
+        self.name = "local"
+        self.type = "llm"
 
         self.model = model
+        self.host = host
 
-        self.client = Client(
-            host="http://127.0.0.1:11434"
-        )
+
 
     def available(self):
 
         try:
 
-            self.client.list()
+            response = requests.get(
+                self.host,
+                timeout=5
+            )
 
-            return True
+            return response.status_code == 200
+
 
         except Exception:
 
             return False
 
-    def generate(self, prompt: str):
 
-        print("DEBUG: Sending prompt to Ollama")
 
-        print("=" * 40)
-        print(prompt)
-        print("=" * 40)
+    def generate(
+        self,
+        prompt,
+        think=False,
+        temperature=0.3,
+        max_tokens=2500
+    ):
 
-        response = self.client.chat(
 
-            model=self.model,
+        url = f"{self.host}/api/chat"
 
-            messages=[
+
+
+        payload = {
+
+            "model": self.model,
+
+
+            "messages": [
+
                 {
                     "role": "user",
                     "content": prompt
                 }
+
             ],
 
-            think=False,
 
-            options={
+            "stream": False,
 
-                "num_ctx": 4096,
 
-                "temperature": 0.2,
+            "think": False,
 
-                "num_predict": 2048
+
+            "options": {
+
+                "num_predict": max_tokens,
+
+                "temperature": temperature,
+
+                "top_p": 0.85,
+
+                "top_k": 40,
+
+                "repeat_penalty": 1.12
 
             }
 
-        )
+        }
 
-        print("DEBUG: Ollama response received")
 
-        msg = response["message"]
 
-        content = msg.get("content", "")
+        start_time = time.time()
 
-        if not content:
-            content = msg.get("thinking", "")
 
-        # حذف بلوک‌های <think>...</think>
-        content = re.sub(
-            r"<think>.*?</think>",
-            "",
-            content,
-            flags=re.DOTALL,
-        )
 
-        # اگر مدل متن استدلال را بدون تگ داخل content فرستاده باشد
-        if "</think>" in content:
-            content = content.split("</think>")[-1]
+        try:
 
-        # حذف فاصله‌های اضافی
-        content = content.strip()
+            print(
+                "[LOCAL PROVIDER] Sending request"
+            )
 
-        return content
+
+            response = requests.post(
+
+                url,
+
+                json=payload,
+
+                timeout=240
+
+            )
+
+
+            response.raise_for_status()
+
+
+            data = response.json()
+
+
+
+            elapsed = time.time() - start_time
+
+
+            print(
+                f"[LOCAL PROVIDER] Generation time: {elapsed:.2f}s"
+            )
+
+
+
+            text = (
+
+                data
+                .get("message", {})
+                .get("content", "")
+
+            )
+
+
+
+            if not text:
+
+                text = data.get(
+                    "response",
+                    ""
+                )
+
+
+
+            if not text:
+
+                print(
+                    "[LOCAL PROVIDER] Empty response"
+                )
+
+                return ""
+
+
+
+            # Remove Qwen thinking blocks
+
+            if "<think>" in text:
+
+                text = text.split(
+                    "<think>",
+                    1
+                )[0]
+
+
+            if "</think>" in text:
+
+                text = text.split(
+                    "</think>",
+                    1
+                )[-1]
+
+
+
+            return text.strip()
+
+
+
+        except Exception as e:
+
+
+            print(
+                "[LOCAL PROVIDER ERROR]",
+                e
+            )
+
+            return ""

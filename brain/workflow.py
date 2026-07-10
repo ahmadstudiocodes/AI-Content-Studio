@@ -8,14 +8,6 @@ class WorkflowExecutor:
 
     """
     Arman Workflow Executor
-
-    ExecutionPlan
-          ↓
-    Execute Tasks
-          ↓
-    Collect Results
-          ↓
-    Return Workflow Result
     """
 
     def execute(
@@ -32,6 +24,9 @@ class WorkflowExecutor:
 
         results = []
 
+        # Context passed between agents
+        context = None
+
         for task in plan.steps:
 
             executive_memory.set_step(
@@ -44,8 +39,12 @@ class WorkflowExecutor:
 
                 result = task_router.route(
                     task,
-                    command
+                    command,
+                    context
                 )
+
+                # Save output for next Agent
+                context = result
 
                 task.status = "completed"
 
@@ -75,9 +74,7 @@ class WorkflowExecutor:
 
                 "task": task.name,
 
-                "status": task.status,
-
-                "result": result
+                "status": task.status
 
             })
 
@@ -97,7 +94,9 @@ class WorkflowExecutor:
 
                 "status": plan.status,
 
-                "tasks": results
+                "tasks": results,
+
+                "final_result": context
 
             },
 

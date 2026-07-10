@@ -1,79 +1,117 @@
 from core.guard_prompt import GuardPrompt
+from core.prompt_object import PromptObject
 
 
 class PromptBuilder:
     """
-    Prompt Builder for Arman StudioOS
+    Central Prompt Builder for Arman StudioOS
 
-    Responsible for creating final prompts
-    before sending them to LLM providers.
+    Responsible for building a structured prompt
+    that can later be retried, versioned and enriched
+    with memory/context.
     """
-
-
-    def __init__(self):
-        pass
-
 
     def build(
         self,
         task: str,
         topic: str,
+        system_prompt: str = "",
+        channel_profile: str = "",
         agent_rules: str = "",
-        context: str = ""
-    ) -> str:
-
+        context: str = "",
+        output_format: str = ""
+    ) -> PromptObject:
 
         guard = GuardPrompt.build(
+
             task=task,
+
             topic=topic,
+
             agent_rules=agent_rules
+
         )
 
-
-        prompt = f"""
+        final_prompt = f"""
 {guard}
 
+==================================================
+SYSTEM
+==================================================
+
+{system_prompt}
+
 
 ==================================================
-TASK EXECUTION
+CHANNEL PROFILE
 ==================================================
 
+{channel_profile}
 
-User Request:
+
+==================================================
+USER REQUEST
+==================================================
+
+Task:
 
 {task}
 
-
-Main Topic:
+Topic:
 
 {topic}
 
 
-Additional Context:
+==================================================
+CONTEXT
+==================================================
 
 {context}
 
 
 ==================================================
-EXECUTION INSTRUCTIONS
+RULES
 ==================================================
 
-
-Execute the task now.
-
-Remember:
-
-- Follow Guard rules.
-- Do not change the task.
-- Do not add explanations.
-- Return only final output.
+{agent_rules}
 
 
 ==================================================
-END PROMPT
+OUTPUT FORMAT
 ==================================================
+
+{output_format}
+
+
+==================================================
+EXECUTION
+==================================================
+
+Execute the task.
+
+Return ONLY the final answer.
+
+Do not explain.
 
 """
 
+        return PromptObject(
 
-        return prompt
+            system=system_prompt,
+
+            channel=channel_profile,
+
+            context=context,
+
+            rules=agent_rules,
+
+            output_format=output_format,
+
+            user_request=topic,
+
+            prompt=final_prompt
+
+        )
+
+
+prompt_builder = PromptBuilder()

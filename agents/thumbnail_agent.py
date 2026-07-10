@@ -1,139 +1,139 @@
-from agents.base_agent import BaseAgent
-from core.local_provider import local_provider
+from agents.base.base_llm_agent import BaseLLMAgent
 
 
-class ThumbnailAgent(BaseAgent):
+class ThumbnailAgent(BaseLLMAgent):
 
-    name = "thumbnail"
+    def __init__(self, provider):
 
-    version = "1.4.1"
-
-    description = "AI YouTube Thumbnail Design Agent"
-
-
-    priority = 80
-
-
-    domains = [
-        "youtube",
-        "thumbnail",
-        "image"
-    ]
-
-
-    capabilities = [
-        "thumbnail_design",
-        "image_prompt",
-        "youtube_cover"
-    ]
-
-
-    def can_handle(self, command):
-
-        return (
-            command.action == "generate"
-            and command.target == "thumbnail"
-            and command.intent.domain in [
-                "youtube",
-                "thumbnail",
-                "image"
-            ]
-        )
-
-
-    def execute(self, command):
-
-        prompt = f"""
+        super().__init__(
+            name="thumbnail",
+            description="Workflow YouTube Thumbnail Agent",
+            provider=provider,
+            system_prompt="""
 You are Arman StudioOS Thumbnail Agent.
 
-Task:
-Design a professional YouTube thumbnail.
+Your ONLY responsibility is creating professional YouTube thumbnails.
 
-Topic:
-{command.payload}
+Never:
+- write scripts
+- perform research
+- redesign courses
+- answer general questions
 
+Only create thumbnail concepts.
+"""
+        )
 
-Language Rules:
+        self.version = "2.2"
 
-- Answer only in natural Persian.
-- Use simple Persian words.
-- Avoid unusual creative words.
-- Do not invent words.
-- Keep architectural terms professional.
+        self.priority = 80
 
+        self.domains = [
+            "youtube",
+            "thumbnail",
+            "cover",
+            "image"
+        ]
 
-Generate exactly these sections:
+        self.capabilities = [
+            "thumbnail",
+            "thumbnail_design",
+            "image_prompt",
+            "youtube_cover"
+        ]
 
+    def build_prompt(self, user_input):
 
-1. Thumbnail Concept
+        user_input = user_input.strip()
 
-Describe:
-- ایده اصلی تصویر
-- حس و پیام احساسی
+        # -----------------------------
+        # Direct Command
+        # -----------------------------
 
+        if "Course Title:" not in user_input \
+           and "Workflow" not in user_input \
+           and "Research" not in user_input:
 
-2. AI Image Generation Prompt
+            return f"""
+You are an expert YouTube Thumbnail Designer.
 
-Create one detailed image prompt.
+USER TOPIC
 
-Must include:
+{user_input}
 
-- ultra realistic architectural visualization
-- modern architecture
+Your task is ONLY creating a thumbnail.
+
+Return ONLY the following sections.
+
+# Thumbnail Concept
+
+- Main Idea
+- Emotional Trigger
+
+# AI Image Prompt
+
+Create ONE highly detailed prompt including:
+
+- photorealistic
 - cinematic lighting
-- camera angle
-- architectural details
-- materials
-- environment
-- realistic textures
-- 8K quality
+- dramatic composition
+- realistic materials
+- depth of field
+- 8K
+- ultra detailed
 
+# Thumbnail Text
 
-3. Thumbnail Text
+Rules
 
-Rules:
-
-- Persian language
+- Persian
 - Maximum 5 words
-- High CTR
-- Emotional and curiosity driven
+- Very high CTR
 
+# Composition
 
-4. Composition
+- Main Subject
+- Text Position
+- Focus Point
+- Background
 
-Include:
+# Camera Angle
 
-- موضوع اصلی
-- جایگاه متن
-- پس زمینه
-- ساختار بصری
-- نقطه تمرکز
+# Lighting
 
+# Color Palette
 
-5. Camera Angle
-
-
-6. Lighting Style
-
-
-7. Color Palette
-
-
-8. CTR Improvement Tips
-
-
-Restrictions:
-
-- No scripts.
-- No channel ideas.
-- No explanations.
-- Only thumbnail design.
-
-Answer in Persian.
+Write EVERYTHING in Persian except the AI image prompt.
 """
 
+        # -----------------------------
+        # Workflow Mode
+        # -----------------------------
 
-        return local_provider.generate(
-            prompt,
-            temperature=0.2
-        )
+        return f"""
+You are the Thumbnail Agent inside Arman StudioOS.
+
+Previous Workflow Output
+
+{user_input}
+
+Your responsibility is ONLY creating the thumbnail.
+
+Do NOT rewrite previous steps.
+
+Return ONLY
+
+# Thumbnail Concept
+
+# AI Image Prompt
+
+# Thumbnail Text
+
+# Composition
+
+# Camera Angle
+
+# Lighting
+
+# Color Palette
+"""

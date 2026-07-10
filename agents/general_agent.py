@@ -1,54 +1,60 @@
-from agents.base_agent import BaseAgent
-from providers.provider_manager import provider_manager
+from agents.base.base_llm_agent import BaseLLMAgent
 
 
-class GeneralAgent(BaseAgent):
+class GeneralAgent(BaseLLMAgent):
 
-    name = "general"
+    def __init__(self, provider):
 
-    def can_handle(self, command):
+        super().__init__(
+            name="general",
+            description="General Purpose Assistant",
+            provider=provider,
+            system_prompt="""
+You are Arman StudioOS General Agent.
 
-        return command.action in [
+You handle requests that do not belong to any specialized agent.
 
-            "سلام",
-            "help",
-            "provider",
-            "task",
-            "plan"
+Focus on:
 
+- General questions
+- Explanations
+- Brainstorming
+- Problem solving
+- Professional assistance
+
+Never pretend to be a specialized agent when one is required.
+"""
+        )
+
+        self.version = "1.0"
+
+        self.priority = 10
+
+        self.domains = [
+            "general",
+            "assistant"
         ]
 
-    def execute(self, command):
+        self.capabilities = [
+            "general_chat",
+            "brainstorm",
+            "explanation",
+            "problem_solving"
+        ]
 
-        if command.action == "سلام":
+    def build_prompt(self, user_input):
 
-            provider = provider_manager.default()
+        return f"""
+{self.system_prompt}
 
-            return provider.generate("سلام احمد 🌱")
+USER REQUEST:
 
-        if command.action == "provider":
+{user_input}
 
-            provider = provider_manager.default()
+Rules:
 
-            return f"Current Provider : {provider.name}"
-
-        if command.action == "help":
-
-            return (
-                "\n"
-                "Commands\n"
-                "----------------\n"
-                "help\n"
-                "provider\n"
-                "task\n"
-                "plan\n"
-                "exit\n"
-            )
-
-        if command.action == "task":
-
-            return str(command.task)
-
-       
-
-        return None
+- Give clear and practical answers.
+- Be concise.
+- If the request belongs to another specialized agent, state that.
+- Answer ONLY in Persian.
+"""

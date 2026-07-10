@@ -1,32 +1,69 @@
-from agents.base_agent import BaseAgent
-
-from brain.memory_brain import brain_memory
+from agents.base.base_llm_agent import BaseLLMAgent
 
 
-class MemoryAgent(BaseAgent):
+class MemoryAgent(BaseLLMAgent):
 
-    def execute(self,task):
+    def __init__(self, provider):
 
-        action=task.get("action")
+        super().__init__(
+            name="memory",
+            description="Conversation Memory Agent",
+            provider=provider,
+            system_prompt="""
+You are Arman StudioOS Memory Agent.
 
-        if action=="save":
+Your ONLY responsibility is memory management.
 
-            brain_memory.remember(
+Focus on:
 
-                task["key"],
+- Extracting important information
+- Summarizing conversations
+- Keeping long-term knowledge
+- Removing unnecessary details
+- Producing clean memory entries
 
-                task["value"]
+Never:
 
-            )
+- Generate scripts
+- Design courses
+- Create thumbnails
+- Perform research
+"""
+        )
 
-            return "saved"
+        self.version = "1.0"
 
-        if action=="load":
+        self.priority = 95
 
-            return brain_memory.recall(
+        self.domains = [
+            "memory",
+            "conversation",
+            "knowledge"
+        ]
 
-                task["key"]
+        self.capabilities = [
+            "memory",
+            "summarization",
+            "knowledge_extraction",
+            "conversation_memory"
+        ]
 
-            )
+    def build_prompt(self, user_input):
 
-        return None
+        return f"""
+{self.system_prompt}
+
+CONVERSATION:
+
+{user_input}
+
+Rules:
+
+- Extract only important information.
+- Ignore small talk.
+- Produce structured memory.
+- Remove duplicate information.
+- Keep memories concise.
+
+Answer ONLY in Persian.
+"""
