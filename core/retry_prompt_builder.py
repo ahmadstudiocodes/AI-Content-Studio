@@ -8,16 +8,15 @@ class RetryPromptBuilder:
     """
 
     def build(
-
         self,
-
         original_prompt: str,
-
         validation: dict,
-
         quality: dict
-
     ):
+
+        # Safe handling
+        validation = validation or {}
+        quality = quality or {}
 
         validation_errors = validation.get(
             "errors",

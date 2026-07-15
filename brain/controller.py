@@ -12,7 +12,7 @@ class BrainController:
     """
     Arman Brain Controller
 
-    Flow
+    Flow:
 
     Command
         ↓
@@ -31,10 +31,6 @@ class BrainController:
         self,
         command
     ):
-
-        # --------------------------------
-        # Reset Memory
-        # --------------------------------
 
         executive_memory.reset()
 
@@ -95,51 +91,50 @@ class BrainController:
                 )
 
                 executive_memory.remember_execution(
-
                     agent="workflow_executor",
-
                     provider="internal",
-
                     result="success"
-
                 )
 
                 return result
 
             # --------------------------------
-            # Step 4 : Direct Execution
+            # Step 4 : Dispatcher
             # --------------------------------
 
             executive_memory.set_step(
-                "Executing"
+                "Dispatching"
             )
 
-            result = dispatcher.route(
+            agent = dispatcher.route(
                 command
             )
 
+            if not agent:
+
+                raise Exception(
+                    f"No agent found for command: {command.raw}"
+                )
+
+            result = agent.run(
+                command.payload
+                or command.raw
+            )
+
             executive_memory.remember_execution(
-
-                agent="dispatcher",
-
+                agent=agent.name,
                 provider="local",
-
                 result="success"
-
             )
 
             return result
 
-        except Exception as e:
+        except Exception:
 
             executive_memory.remember_execution(
-
                 agent="brain",
-
                 provider="internal",
-
                 result="failed"
-
             )
 
             raise

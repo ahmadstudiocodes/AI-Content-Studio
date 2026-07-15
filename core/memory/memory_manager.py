@@ -1,37 +1,182 @@
+from core.memory.short_term import ShortTermMemory
+from core.memory.long_term import LongTermMemory
+from datetime import datetime
+
+
 class MemoryManager:
+
     """
-    Coordinates all memory systems.
+    Arman StudioOS Memory Manager
+
+    Coordinates:
+
+    - Short Term Memory
+    - Long Term Memory
+
+    Provides unified memory interface.
     """
+
+
 
     def __init__(self):
 
-        self.short_term = None
-        self.long_term = None
+        self.short_term = ShortTermMemory()
 
-    def remember(self, role, content):
+        self.long_term = LongTermMemory()
 
-        if self.short_term:
-            self.short_term.add(role, content)
 
-        if self.long_term:
-            self.long_term.add(role, content)
 
-    def recall(self):
+    # ==================================================
+
+    def remember(
+        self,
+        role,
+        content
+    ):
+
+
+        if content is None:
+
+            return
+
+
+
+        content = str(content).strip()
+
+
+
+        if not content:
+
+            return
+
+
+
+        role = str(
+            role or "unknown"
+        )
+
+
+
+        memory_item = {
+
+            "role": role,
+
+            "content": content,
+
+            "timestamp":
+                datetime.now().isoformat()
+
+        }
+
+
+
+        self.short_term.add(
+
+            role,
+
+            content
+
+        )
+
+
+
+        self.long_term.add(
+
+            role,
+
+            content
+
+        )
+
+
+
+    # ==================================================
+
+    def recall(
+        self,
+        limit=None
+    ):
+
 
         data = []
 
-        if self.short_term:
-            data.extend(self.short_term.get())
 
-        if self.long_term:
-            data.extend(self.long_term.get())
+        data.extend(
+
+            self.short_term.get()
+
+        )
+
+
+        data.extend(
+
+            self.long_term.get()
+
+        )
+
+
+
+        if limit:
+
+            return data[-limit:]
+
+
 
         return data
 
-    def clear(self):
 
-        if self.short_term:
-            self.short_term.clear()
 
-        if self.long_term:
-            self.long_term.clear()
+    # ==================================================
+
+    def clear(
+        self
+    ):
+
+
+        self.short_term.clear()
+
+        self.long_term.clear()
+
+
+
+    # ==================================================
+
+    def clear_short_term(
+        self
+    ):
+
+
+        self.short_term.clear()
+
+
+
+    # ==================================================
+
+    def clear_long_term(
+        self
+    ):
+
+
+        self.long_term.clear()
+
+
+
+    # ==================================================
+
+    def snapshot(
+        self
+    ):
+
+
+        return {
+
+            "short_term":
+
+                self.short_term.get(),
+
+
+            "long_term":
+
+                self.long_term.get()
+
+        }

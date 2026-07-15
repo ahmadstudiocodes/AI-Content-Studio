@@ -1,38 +1,100 @@
 import sqlite3
+
 from pathlib import Path
+
 
 
 class MemoryStorage:
 
+    """
+    Arman StudioOS Memory Storage
+
+    SQLite persistent storage
+    for long-term memories.
+    """
+
+
+
     def __init__(self):
 
-        Path("database").mkdir(exist_ok=True)
 
-        self.conn = sqlite3.connect("database/studio.db")
+        Path(
+            "database"
+        ).mkdir(
+            exist_ok=True
+        )
 
-        self.cursor = self.conn.cursor()
 
-        self.cursor.execute("""
+        self.conn = sqlite3.connect(
 
-        CREATE TABLE IF NOT EXISTS memory(
+            "database/studio.db",
 
-            id INTEGER PRIMARY KEY,
-
-            category TEXT,
-
-            key TEXT,
-
-            value TEXT,
-
-            created TEXT
+            check_same_thread=False
 
         )
 
-        """)
+
+        self.cursor = self.conn.cursor()
+
+
+        self.initialize()
+
+
+
+    # ==================================================
+
+    def initialize(
+        self
+    ):
+
+
+        self.cursor.execute(
+
+            """
+
+            CREATE TABLE IF NOT EXISTS memory(
+
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                category TEXT,
+
+                key TEXT,
+
+                value TEXT,
+
+                created TEXT
+
+            )
+
+            """
+
+        )
+
+
+        self.cursor.execute(
+
+            """
+
+            CREATE INDEX IF NOT EXISTS idx_memory_key
+
+            ON memory(key)
+
+            """
+
+        )
+
 
         self.conn.commit()
 
-    def save(self,item):
+
+
+    # ==================================================
+
+    def save(
+        self,
+        item
+    ):
+
 
         self.cursor.execute(
 
@@ -60,21 +122,117 @@ class MemoryStorage:
 
         )
 
+
         self.conn.commit()
 
-    def search(self,key):
+
+
+    # ==================================================
+
+    def search(
+        self,
+        key
+    ):
+
 
         self.cursor.execute(
 
-            "SELECT value FROM memory WHERE key=?",
+            """
 
-            (key,)
+            SELECT
+
+                category,
+
+                key,
+
+                value,
+
+                created
+
+
+            FROM memory
+
+
+            WHERE key=?
+
+
+            ORDER BY id DESC
+
+            """,
+
+            (
+
+                key,
+
+            )
 
         )
 
-        row=self.cursor.fetchone()
 
-        return row
+        rows = self.cursor.fetchall()
 
 
-storage=MemoryStorage()
+        return [
+
+            {
+
+                "category": row[0],
+
+                "key": row[1],
+
+                "value": row[2],
+
+                "created": row[3]
+
+            }
+
+            for row in rows
+
+        ]
+
+
+
+    # ==================================================
+
+    def delete(
+        self,
+        key
+    ):
+
+
+        self.cursor.execute(
+
+            "DELETE FROM memory WHERE key=?",
+
+            (
+
+                key,
+
+            )
+
+        )
+
+
+        self.conn.commit()
+
+
+
+    # ==================================================
+
+    def clear(
+        self
+    ):
+
+
+        self.cursor.execute(
+
+            "DELETE FROM memory"
+
+        )
+
+
+        self.conn.commit()
+
+
+
+storage = MemoryStorage()

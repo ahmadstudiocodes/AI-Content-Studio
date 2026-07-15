@@ -7,10 +7,8 @@ class QualityChecker:
     """
     Arman StudioOS Quality Checker
 
-    نسخه 2
-
-    بررسی کیفیت خروجی بر اساس
-    قوانین اختصاصی هر Agent
+    Validates output structure
+    according to Agent rules.
     """
 
     OLD_KEYWORDS = [
@@ -23,7 +21,7 @@ class QualityChecker:
 
     ]
 
-    REPETITION_THRESHOLD = 4
+    REPETITION_THRESHOLD = 5
 
     GARBAGE = [
 
@@ -35,92 +33,128 @@ class QualityChecker:
 
     ]
 
-    def evaluate(self, output, command):
+    def evaluate(
+        self,
+        output,
+        task=""
+    ):
 
-        text = str(output)
-
+        text = str(output or "")
         lower = text.lower()
 
+        score = 100
         errors = []
 
-        score = 100
+        # ---------------------------------
+        # Empty Output
+        # ---------------------------------
 
-        # -----------------------------------
-        # Agent Rules
-        # -----------------------------------
+        if not text.strip():
 
-        agent = ""
+            return {
 
-        if command.intent:
+                "valid": False,
+                "score": 0,
+                "errors": [
+                    "EMPTY_OUTPUT"
+                ]
 
-            agent = command.intent.domain
+            }
 
-        rules = QualityRules.get(agent)
+        # ---------------------------------
+        # Load Rules
+        # ---------------------------------
 
-        # -----------------------------------
-        # Minimum Length
-        # -----------------------------------
+        rules = QualityRules.RULES.get(
+            task,
+            {}
+        )
 
-        if len(text) < rules["min_length"]:
+        if not rules:
 
-            errors.append(
+            return {
 
-                f"Output shorter than {rules['min_length']} chars."
+                "valid": True,
+                "score": score,
+                "errors": []
 
-            )
+            }
+
+        # ---------------------------------
+        # Length
+        # ---------------------------------
+
+        minimum = rules.get(
+            "min_length",
+            0
+        )
+
+        if len(text) < minimum:
 
             score -= 20
 
-        # -----------------------------------
+            errors.append(
+                f"Output shorter than {minimum} chars."
+            )
+
+        # ---------------------------------
         # Required Sections
-        # -----------------------------------
+        # ---------------------------------
+
+        required = rules.get(
+            "required",
+            {}
+        )
 
         missing = []
 
-        for section in rules["required"]:
+        for section, keywords in required.items():
 
-            if section.lower() not in lower:
+            found = False
 
-                missing.append(section)
+            for keyword in keywords:
+
+                if keyword.lower() in lower:
+
+                    found = True
+                    break
+
+            if not found:
+
+                missing.append(
+                    section
+                )
 
         if missing:
 
-            errors.append(
-
-                "Missing sections: "
-
-                + ", ".join(missing)
-
-            )
-
             score -= 25
 
-        # -----------------------------------
+            errors.append(
+                "Missing sections: "
+                + ", ".join(missing)
+            )
+
+        # ---------------------------------
         # Old Content
-        # -----------------------------------
+        # ---------------------------------
 
         for keyword in self.OLD_KEYWORDS:
 
             if keyword in lower:
 
+                score -= 15
+
                 errors.append(
-
                     f"Outdated content: {keyword}"
-
                 )
 
-                score -= 20
-
-        # -----------------------------------
-        # Word Repetition
-        # -----------------------------------
+        # ---------------------------------
+        # Repetition
+        # ---------------------------------
 
         words = re.findall(
-
             r"\w+",
-
             lower
-
         )
 
         counter = {}
@@ -128,10 +162,12 @@ class QualityChecker:
         for word in words:
 
             if len(word) <= 2:
-
                 continue
 
-            counter[word] = counter.get(word, 0) + 1
+            counter[word] = counter.get(
+                word,
+                0
+            ) + 1
 
         repeated = [
 
@@ -145,52 +181,36 @@ class QualityChecker:
 
         if repeated:
 
+            score -= 10
+
             errors.append(
-
                 "Repeated words: "
-
                 + ", ".join(repeated[:10])
-
             )
 
-            score -= 15
-
-        # -----------------------------------
-        # Garbage Detection
-        # -----------------------------------
+        # ---------------------------------
+        # Garbage
+        # ---------------------------------
 
         for item in self.GARBAGE:
 
             if item.lower() in lower:
 
-                errors.append(
-
-                    f"Garbage text: {item}"
-
-                )
-
                 score -= 20
 
-        # -----------------------------------
-        # Final Score
-        # -----------------------------------
+                errors.append(
+                    f"Garbage text: {item}"
+                )
 
-        score = max(score, 0)
-
-        passed = (
-
-            score >= 70
-
-            and len(errors) == 0
-
+        score = max(
+            score,
+            0
         )
 
         return {
 
-            "passed": passed,
-
+            "valid": score >= 70,
             "score": score,
-
             "errors": errors
 
         }

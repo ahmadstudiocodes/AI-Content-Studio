@@ -12,82 +12,125 @@ class ScriptAgent(BaseLLMAgent):
             system_prompt="""
 You are Arman StudioOS Script Agent.
 
-Your ONLY responsibility is writing complete lesson scripts.
+Your ONLY responsibility:
+Create professional lesson scripts from existing lesson plans.
 
-You NEVER create:
-- YouTube ideas
-- Video titles
-- SEO
-- Thumbnails
-- Content plans
+You do NOT:
+- create research
+- create course structure
+- create SEO
+- create thumbnails
+- create strategies
 
-Those belong to YouTubeAgent.
-
-You ONLY write the final lesson script based on an existing topic or plan.
+You only write the final teaching script.
 """
         )
 
-        self.version = "3.2"
 
-        # پایین‌تر از YouTubeAgent
-        self.priority = 25
+        self.version = "3.4"
 
-        # عمداً youtube حذف شده
+        self.priority = 40
+
+
         self.domains = [
             "script",
             "lesson",
-            "course",
             "training",
             "education",
             "narration"
         ]
 
+
         self.capabilities = [
             "lesson_script",
             "course_script",
-            "training_script",
-            "narration",
-            "voiceover"
+            "voiceover",
+            "narration"
         ]
 
-    def build_prompt(self, user_input):
+
+
+    def build_prompt(
+        self,
+        user_input
+    ):
+
+
+        # Safety compression
+        if len(user_input) > 3000:
+
+            user_input = user_input[:3000]
+
+
 
         return f"""
 You are Arman StudioOS Script Agent.
 
-Write ONE complete YouTube lesson script.
 
-Previous Context:
+Create ONE professional YouTube lesson script.
+
+Lesson information:
 
 {user_input}
 
-Rules:
 
-- Do NOT generate YouTube ideas.
-- Do NOT generate titles.
-- Do NOT generate SEO.
-- Do NOT generate thumbnails.
-- Do NOT redesign the course.
-- Write ONE complete lesson only.
-- Focus on audience retention.
-- Answer ONLY in Persian.
+Requirements:
 
-Return ONLY:
+- Persian language only.
+- Professional educational tone.
+- Suitable for advanced 3D artists.
+- Focus on practical teaching.
+- Keep script around 800-1200 words.
+- Do not generate unnecessary explanations.
+
+
+Output format:
+
 
 # Video Title
 
+
 # Opening Hook
+
 
 # Introduction
 
+
 # Main Content
 
-For every section include:
 
-- Narration
-- Visual Suggestion
+Section 1:
+
+Narration:
+...
+
+Visual Suggestion:
+...
+
+
+Section 2:
+
+Narration:
+...
+
+Visual Suggestion:
+...
+
+
+Section 3:
+
+Narration:
+...
+
+Visual Suggestion:
+...
+
 
 # Call To Action
 
+
 # Ending
+
+
+Return ONLY the script.
 """

@@ -10,10 +10,8 @@ class OutputCleaner:
     before validation and user output.
     """
 
-
     @staticmethod
     def clean(output):
-
 
         # ----------------------------------
         # Dictionary
@@ -30,7 +28,6 @@ class OutputCleaner:
                 indent=2
 
             )
-
 
         # ----------------------------------
         # List / Tuple
@@ -54,7 +51,6 @@ class OutputCleaner:
 
             )
 
-
         # ----------------------------------
         # Other Objects
         # ----------------------------------
@@ -62,8 +58,6 @@ class OutputCleaner:
         elif not isinstance(output, str):
 
             output = str(output)
-
-
 
         # ----------------------------------
         # Remove Qwen Thinking
@@ -81,7 +75,6 @@ class OutputCleaner:
 
         )
 
-
         output = output.replace(
 
             "<think>",
@@ -89,7 +82,6 @@ class OutputCleaner:
             ""
 
         )
-
 
         output = output.replace(
 
@@ -99,15 +91,13 @@ class OutputCleaner:
 
         )
 
-
-
         # ----------------------------------
-        # Remove Markdown Code Blocks
+        # Remove Markdown Fences Only
         # ----------------------------------
 
         output = re.sub(
 
-            r"```[\s\S]*?```",
+            r"```[a-zA-Z0-9_-]*\n?",
 
             "",
 
@@ -115,7 +105,13 @@ class OutputCleaner:
 
         )
 
+        output = output.replace(
 
+            "```",
+
+            ""
+
+        )
 
         # ----------------------------------
         # Remove common LLM artifacts
@@ -135,7 +131,6 @@ class OutputCleaner:
 
         ]
 
-
         for pattern in forbidden_patterns:
 
             output = output.replace(
@@ -145,8 +140,6 @@ class OutputCleaner:
                 ""
 
             )
-
-
 
         # ----------------------------------
         # Fix spacing
@@ -162,7 +155,6 @@ class OutputCleaner:
 
         )
 
-
         output = re.sub(
 
             r"[ \t]{2,}",
@@ -172,7 +164,5 @@ class OutputCleaner:
             output
 
         )
-
-
 
         return output.strip()

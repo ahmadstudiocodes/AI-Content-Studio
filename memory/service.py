@@ -2,31 +2,158 @@ from memory.models import MemoryItem
 from memory.storage import storage
 
 
+
 class MemoryService:
 
-    def remember(self,
+    """
+    Arman StudioOS Memory Service
 
-                 category,
+    Business layer between:
 
-                 key,
+        Brain
+          |
+        Memory Service
+          |
+        Storage
 
-                 value):
-
-        item=MemoryItem(
-
-            category,
-
-            key,
-
-            value
-
-        )
-
-        storage.save(item)
-
-    def recall(self,key):
-
-        return storage.search(key)
+    """
 
 
-memory_service=MemoryService()
+    # ==================================================
+
+    def remember(
+        self,
+        category,
+        key,
+        value
+    ):
+
+
+        if not key:
+
+            return False
+
+
+
+        if value is None:
+
+            return False
+
+
+
+        try:
+
+
+            item = MemoryItem(
+
+                category or "general",
+
+                str(key),
+
+                str(value)
+
+            )
+
+
+            storage.save(
+                item
+            )
+
+
+            return True
+
+
+
+        except Exception as e:
+
+
+            print(
+                f"[MEMORY SERVICE] Save failed: {e}"
+            )
+
+
+            return False
+
+
+
+    # ==================================================
+
+    def recall(
+        self,
+        key,
+        category=None
+    ):
+
+
+        try:
+
+
+            results = storage.search(
+                key
+            )
+
+
+            if category:
+
+
+                results = [
+
+                    item
+
+                    for item in results
+
+                    if getattr(
+                        item,
+                        "category",
+                        None
+                    ) == category
+
+                ]
+
+
+
+            return results
+
+
+
+        except Exception as e:
+
+
+            print(
+                f"[MEMORY SERVICE] Recall failed: {e}"
+            )
+
+
+            return []
+
+
+
+    # ==================================================
+
+    def delete(
+        self,
+        key
+    ):
+
+
+        try:
+
+
+            return storage.delete(
+                key
+            )
+
+
+        except Exception as e:
+
+
+            print(
+                f"[MEMORY SERVICE] Delete failed: {e}"
+            )
+
+
+            return False
+
+
+
+memory_service = MemoryService()

@@ -1,62 +1,62 @@
-class RetryPromptBuilder:
+class RetryPrompt:
     """
-    Builds retry prompts based on validation
-    and quality evaluation results.
+    Builds retry instructions for failed outputs.
+
+    Used by Retry Engine when an Agent output
+    does not pass validation.
     """
 
-    @staticmethod
+
     def build(
+        self,
         original_prompt: str,
-        validation: dict = None,
-        quality: dict = None
+        errors=None
     ):
 
-        problems = []
+        errors = errors or []
 
-        if validation:
 
-            for err in validation.get("errors", []):
-
-                problems.append(err)
-
-        if quality:
-
-            for issue in quality.get("issues", []):
-
-                problems.append(issue)
-
-        if not problems:
+        if not errors:
 
             return original_prompt
 
-        feedback = "\n".join(
 
-            f"- {p}"
 
-            for p in problems
+        problems = "\n".join(
+
+            f"- {error}"
+
+            for error in errors
 
         )
 
+
         return f"""
 
-The previous answer was rejected.
+Previous output failed validation.
 
 Problems:
 
-{feedback}
+{problems}
 
-Rewrite the answer.
 
-Rules:
+Instructions:
 
-- Fix every problem.
-- Do NOT explain.
-- Do NOT apologize.
+- Rewrite the complete answer.
+- Fix all listed problems.
+- Do not explain changes.
+- Do not apologize.
 - Return only the final answer.
-- Follow all previous instructions.
+- Do not output reasoning.
+- Do not output <think> tags.
 
--------------------------------------
+
+Original Task:
 
 {original_prompt}
 
-"""
+""".strip()
+
+
+
+retry_prompt = RetryPrompt()

@@ -1,139 +1,235 @@
 from agents.base.base_llm_agent import BaseLLMAgent
 
 
-class ThumbnailAgent(BaseLLMAgent):
 
-    def __init__(self, provider):
+class ThumbnailAgent(BaseLLMAgent):
+    """
+    Arman StudioOS
+
+    Professional Thumbnail Agent
+
+
+    Responsibilities:
+
+    - Thumbnail concepts
+    - CTR optimization
+    - Visual direction
+    - Image prompts
+    - YouTube thumbnail strategy
+    """
+
+
+
+    VERSION = "1.0.0"
+
+
+
+    def __init__(
+        self,
+        provider
+    ):
+
 
         super().__init__(
+
             name="thumbnail",
-            description="Workflow YouTube Thumbnail Agent",
+
+            description=
+            "Professional YouTube Thumbnail Agent",
+
             provider=provider,
+
             system_prompt="""
+
 You are Arman StudioOS Thumbnail Agent.
 
-Your ONLY responsibility is creating professional YouTube thumbnails.
+Your responsibility is creating
+high-performing thumbnail concepts.
+
+Focus on:
+
+- Click Through Rate (CTR)
+- Visual hierarchy
+- Contrast
+- Curiosity
+- Audience psychology
+- Professional composition
+
 
 Never:
-- write scripts
-- perform research
-- redesign courses
-- answer general questions
 
-Only create thumbnail concepts.
+- Write full scripts
+- Perform deep research
+- Create final images
+
 """
+
         )
 
-        self.version = "2.2"
 
-        self.priority = 80
+        self.priority = 90
+
+
 
         self.domains = [
-            "youtube",
+
             "thumbnail",
-            "cover",
-            "image"
+
+            "youtube",
+
+            "visual_design"
+
         ]
+
+
 
         self.capabilities = [
-            "thumbnail",
+
             "thumbnail_design",
+
+            "ctr_optimization",
+
             "image_prompt",
-            "youtube_cover"
+
+            "visual_strategy"
+
         ]
 
-    def build_prompt(self, user_input):
 
-        user_input = user_input.strip()
 
-        # -----------------------------
-        # Direct Command
-        # -----------------------------
+    # =====================================================
+    # Capability
+    # =====================================================
 
-        if "Course Title:" not in user_input \
-           and "Workflow" not in user_input \
-           and "Research" not in user_input:
 
-            return f"""
-You are an expert YouTube Thumbnail Designer.
+    def has_capability(
+        self,
+        capability
+    ):
 
-USER TOPIC
+        return capability in self.capabilities
 
-{user_input}
 
-Your task is ONLY creating a thumbnail.
 
-Return ONLY the following sections.
+    # =====================================================
+    # Dispatcher
+    # =====================================================
 
-# Thumbnail Concept
 
-- Main Idea
-- Emotional Trigger
+    def can_handle(
+        self,
+        user_input
+    ):
 
-# AI Image Prompt
 
-Create ONE highly detailed prompt including:
+        text = str(
+            user_input
+        ).lower()
 
-- photorealistic
-- cinematic lighting
-- dramatic composition
-- realistic materials
-- depth of field
-- 8K
-- ultra detailed
 
-# Thumbnail Text
 
-Rules
+        keywords = [
 
-- Persian
-- Maximum 5 words
-- Very high CTR
+            "thumbnail",
 
-# Composition
+            "کاور",
 
-- Main Subject
-- Text Position
-- Focus Point
-- Background
+            "تامبنیل",
 
-# Camera Angle
+            "تصویر یوتیوب",
 
-# Lighting
+            "youtube thumbnail",
 
-# Color Palette
+            "کاور ویدیو"
 
-Write EVERYTHING in Persian except the AI image prompt.
-"""
+        ]
 
-        # -----------------------------
-        # Workflow Mode
-        # -----------------------------
+
+
+        return any(
+
+            key in text
+
+            for key in keywords
+
+        )
+
+
+
+    # =====================================================
+    # Prompt Builder
+    # =====================================================
+
+
+    def build_prompt(
+        self,
+        user_input
+    ):
+
 
         return f"""
-You are the Thumbnail Agent inside Arman StudioOS.
 
-Previous Workflow Output
+{self.system_prompt}
+
+
+USER REQUEST:
 
 {user_input}
 
-Your responsibility is ONLY creating the thumbnail.
 
-Do NOT rewrite previous steps.
 
-Return ONLY
+Required Structure:
+
 
 # Thumbnail Concept
 
-# AI Image Prompt
 
-# Thumbnail Text
+# Main Visual
+
 
 # Composition
 
-# Camera Angle
 
-# Lighting
+# Text Placement
 
-# Color Palette
+
+# Color Strategy
+
+
+# CTR Psychology
+
+
+# Image Generation Prompt
+
+
+# Negative Prompt
+
+
+
+Rules:
+
+- Answer in Persian.
+- Focus on professional YouTube thumbnails.
+- Keep text minimal.
+- Prioritize visual impact.
+
 """
+
+
+
+    # =====================================================
+    # Post Processing
+    # =====================================================
+
+
+    def postprocess(
+        self,
+        response,
+        user_input=None
+    ):
+
+
+        return super().postprocess(
+            response,
+            user_input
+        )

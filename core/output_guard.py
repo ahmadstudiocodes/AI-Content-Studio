@@ -9,21 +9,15 @@ class OutputGuard:
     to the user.
     """
 
-
-
     def clean(self, text):
 
         if not isinstance(text, str):
 
             return ""
 
-
-
         if not text.strip():
 
             return ""
-
-
 
         # -----------------------------
         # Remove Qwen thinking blocks
@@ -36,27 +30,21 @@ class OutputGuard:
             flags=re.DOTALL
         )
 
-
         text = text.replace(
             "<think>",
             ""
         )
-
 
         text = text.replace(
             "</think>",
             ""
         )
 
-
-
         # -----------------------------
         # Remove markdown noise
         # -----------------------------
 
         text = text.strip()
-
-
 
         # -----------------------------
         # Fix repeated spaces
@@ -68,20 +56,27 @@ class OutputGuard:
             text
         )
 
-
         text = re.sub(
             r" {2,}",
             " ",
             text
         )
 
-
-
         return text.strip()
 
-
-
     def validate(self, text):
+
+        if not isinstance(text, str):
+
+            return {
+
+                "valid": False,
+
+                "reason": "EMPTY_OUTPUT"
+
+            }
+
+        text = text.strip()
 
         if not text:
 
@@ -93,7 +88,6 @@ class OutputGuard:
 
             }
 
-
         if len(text) < 20:
 
             return {
@@ -104,8 +98,6 @@ class OutputGuard:
 
             }
 
-
-
         return {
 
             "valid": True,
@@ -114,14 +106,11 @@ class OutputGuard:
 
         }
 
-
-
     def process(self, text):
 
         cleaned = self.clean(text)
 
         validation = self.validate(cleaned)
-
 
         return {
 
@@ -130,7 +119,6 @@ class OutputGuard:
             "validation": validation
 
         }
-
 
 
 output_guard = OutputGuard()

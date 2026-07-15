@@ -1,32 +1,167 @@
 class AgentRegistry:
 
-    def __init__(self):
+    """
+    Arman StudioOS Agent Registry
+
+    Responsible for:
+
+    - Registering agents
+    - Finding agents
+    - Managing agent lifecycle
+
+    """
+
+
+    def __init__(
+        self
+    ):
 
         self._agents = {}
 
-    def register(self, name, agent):
 
-        self._agents[name.lower()] = agent
 
-    def unregister(self, name):
+    # ==================================================
 
-        self._agents.pop(name.lower(), None)
+    def register(
+        self,
+        name,
+        agent
+    ):
 
-    def get(self, name):
 
-        return self._agents.get(name.lower())
+        if not name:
 
-    def exists(self, name):
+            raise ValueError(
+                "Agent name is required"
+            )
 
-        return name.lower() in self._agents
 
-    def all(self):
+        if agent is None:
 
-        return self._agents
+            raise ValueError(
+                "Agent instance is required"
+            )
 
-    def count(self):
 
-        return len(self._agents)
+        key = str(
+            name
+        ).lower()
+
+
+
+        self._agents[key] = agent
+
+
+
+        return True
+
+
+
+    # ==================================================
+
+    def unregister(
+        self,
+        name
+    ):
+
+
+        if not name:
+
+            return False
+
+
+
+        return self._agents.pop(
+
+            str(name).lower(),
+
+            None
+
+        ) is not None
+
+
+
+    # ==================================================
+
+    def get(
+        self,
+        name
+    ):
+
+
+        if not name:
+
+            return None
+
+
+
+        return self._agents.get(
+
+            str(name).lower()
+
+        )
+
+
+
+    # ==================================================
+
+    def exists(
+        self,
+        name
+    ):
+
+
+        if not name:
+
+            return False
+
+
+
+        return (
+
+            str(name).lower()
+
+            in self._agents
+
+        )
+
+
+
+    # ==================================================
+
+    def all(
+        self
+    ):
+
+
+        return dict(
+            self._agents
+        )
+
+
+
+    # ==================================================
+
+    def count(
+        self
+    ):
+
+
+        return len(
+            self._agents
+        )
+
+
+
+    # ==================================================
+
+    def clear(
+        self
+    ):
+
+
+        self._agents.clear()
+
 
 
 registry = AgentRegistry()

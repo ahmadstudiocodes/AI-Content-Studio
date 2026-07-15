@@ -10,7 +10,6 @@ class LocalProvider:
     Optimized for agent execution.
     """
 
-
     def __init__(
         self,
         model="qwen3:4b",
@@ -23,8 +22,6 @@ class LocalProvider:
         self.model = model
         self.host = host
 
-
-
     def available(self):
 
         try:
@@ -36,12 +33,9 @@ class LocalProvider:
 
             return response.status_code == 200
 
-
         except Exception:
 
             return False
-
-
 
     def generate(
         self,
@@ -51,15 +45,11 @@ class LocalProvider:
         max_tokens=2500
     ):
 
-
         url = f"{self.host}/api/chat"
-
-
 
         payload = {
 
             "model": self.model,
-
 
             "messages": [
 
@@ -70,12 +60,9 @@ class LocalProvider:
 
             ],
 
-
             "stream": False,
 
-
-            "think": False,
-
+            "think": think,
 
             "options": {
 
@@ -93,11 +80,7 @@ class LocalProvider:
 
         }
 
-
-
         start_time = time.time()
-
-
 
         try:
 
@@ -105,33 +88,25 @@ class LocalProvider:
                 "[LOCAL PROVIDER] Sending request"
             )
 
-
             response = requests.post(
 
                 url,
 
                 json=payload,
 
-                timeout=240
+                timeout=360
 
             )
 
-
             response.raise_for_status()
-
 
             data = response.json()
 
-
-
             elapsed = time.time() - start_time
-
 
             print(
                 f"[LOCAL PROVIDER] Generation time: {elapsed:.2f}s"
             )
-
-
 
             text = (
 
@@ -141,16 +116,12 @@ class LocalProvider:
 
             )
 
-
-
             if not text:
 
                 text = data.get(
                     "response",
                     ""
                 )
-
-
 
             if not text:
 
@@ -159,8 +130,6 @@ class LocalProvider:
                 )
 
                 return ""
-
-
 
             # Remove Qwen thinking blocks
 
@@ -171,7 +140,6 @@ class LocalProvider:
                     1
                 )[0]
 
-
             if "</think>" in text:
 
                 text = text.split(
@@ -179,14 +147,9 @@ class LocalProvider:
                     1
                 )[-1]
 
-
-
             return text.strip()
 
-
-
         except Exception as e:
-
 
             print(
                 "[LOCAL PROVIDER ERROR]",

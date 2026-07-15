@@ -4,58 +4,90 @@ import re
 class ContextCompressor:
 
     """
-    Smart Context Compressor
+    Arman StudioOS Smart Context Compressor
 
-    Compresses previous Agent outputs
-    based on the next target Agent.
+    Compresses previous agent outputs
+    before passing context to next agents.
     """
 
-    DEFAULT_LIMIT = 1200
+    DEFAULT_LIMIT = 1000
+
+
+    TARGET_LIMITS = {
+
+        "course": 1200,
+        "script": 900,
+        "thumbnail": 700,
+        "publish": 900,
+        "youtube": 1000,
+        "research": 1200,
+        "architecture": 1000,
+        "general": 800
+
+    }
+
 
     TARGET_SECTIONS = {
 
+
         "course": [
-            "Course Title",
-            "Target Audience",
+
+            "Video Title",
             "Learning Objectives",
-            "Prerequisites",
+            "Main Content",
             "Final Project",
             "Expected Skills"
+
         ],
+
 
         "script": [
-            "Course Title",
-            "Target Audience",
-            "Learning Objectives",
-            "Expected Skills"
-        ],
 
-        "thumbnail": [
             "Video Title",
             "Opening Hook",
-            "Main Sections",
-            "Thumbnail Concept"
+            "Introduction",
+            "Main Content",
+            "Call To Action",
+            "Ending"
+
         ],
 
+
+        "thumbnail": [
+
+            "Video Title",
+            "Opening Hook",
+            "Thumbnail Concept",
+            "Composition"
+
+        ],
+
+
         "publish": [
+
             "SEO Title",
             "SEO Description",
             "YouTube Tags",
             "Hashtags",
             "Pinned Comment"
+
+        ],
+
+
+        "youtube": [
+
+            "Video Title",
+            "Hook",
+            "Strategy",
+            "Audience",
+            "Structure"
+
         ]
-    }
-
-    TARGET_LIMITS = {
-
-        "course": 1400,
-        "script": 1000,
-        "thumbnail": 700,
-        "publish": 900
 
     }
 
-    # -------------------------------------
+
+    # ==================================================
 
     def compress(
         self,
@@ -63,44 +95,70 @@ class ContextCompressor:
         target="general"
     ):
 
-        if not isinstance(text, str):
+
+        if text is None:
+
             return ""
+
+
+        if not isinstance(text, str):
+
+            text = str(text)
+
+
+        text = self.clean_text(text)
+
+
+        if not text:
+
+            return ""
+
 
         sections = self.TARGET_SECTIONS.get(
             target,
             []
         )
 
-        output = []
+
+        collected = []
+
 
         for section in sections:
 
-            content = self.extract_section(
+            extracted = self.extract_section(
                 text,
                 section
             )
 
-            if content:
+            if extracted:
 
-                if len(content) > 350:
-                    content = content[:350]
+                collected.append(extracted)
 
-                output.append(content)
 
-        if output:
 
-            compressed = "\n\n".join(output)
+        if not collected:
 
-            limit = self.TARGET_LIMITS.get(
-                target,
-                self.DEFAULT_LIMIT
+            collected = self.smart_fallback(
+                text
             )
 
-            return compressed[:limit]
 
-        return text[:600]
+        compressed = self.remove_duplicates(
+            "\n\n".join(collected)
+        )
 
-    # -------------------------------------
+
+        limit = self.TARGET_LIMITS.get(
+            target,
+            self.DEFAULT_LIMIT
+        )
+
+
+        return compressed[:limit]
+
+
+
+    # ==================================================
 
     def extract_section(
         self,
@@ -108,18 +166,173 @@ class ContextCompressor:
         section
     ):
 
-        pattern = rf"{re.escape(section)}.*?(?=\n#|\Z)"
+
+        pattern = (
+
+            rf"(?:^|\n)"
+            rf"[#*\-\s]*"
+            rf"{re.escape(section)}"
+            rf"\s*:?\s*\n?"
+            rf"(.*?)(?=\n[#*\-\s]*[A-Za-z\u0600-\u06FF ]+\s*:?\s*\n|\Z)"
+
+        )
+
 
         match = re.search(
             pattern,
             text,
-            flags=re.S
+            flags=re.S | re.I
         )
 
-        if match:
-            return match.group(0).strip()
 
-        return None
+        if not match:
+
+            return None
+
+
+
+        body = match.group(1).strip()
+
+
+        if not body:
+
+            return None
+
+
+
+        body = body[:400]
+
+
+        return (
+            f"{section}\n{body}"
+        )
+
+
+
+    # ==================================================
+
+    def smart_fallback(
+        self,
+        text
+    ):
+
+
+        lines = []
+
+
+        blocked = {
+
+            "copyright",
+            "references",
+            "منبع",
+            "محدودیت",
+            "کپی رایت"
+
+        }
+
+
+
+        for line in text.splitlines():
+
+
+            line = line.strip()
+
+
+
+            if not line:
+
+                continue
+
+
+
+            if any(
+
+                word.lower() in line.lower()
+
+                for word in blocked
+
+            ):
+
+                continue
+
+
+
+            lines.append(line)
+
+
+
+        return lines[:25]
+
+
+
+    # ==================================================
+
+    def remove_duplicates(
+        self,
+        text
+    ):
+
+
+        seen = set()
+
+        output = []
+
+
+
+        for line in text.splitlines():
+
+
+            clean = line.strip()
+
+
+
+            if not clean:
+
+                continue
+
+
+
+            key = clean.lower()
+
+
+
+            if key in seen:
+
+                continue
+
+
+
+            seen.add(key)
+
+
+            output.append(clean)
+
+
+
+        return "\n".join(output)
+
+
+
+    # ==================================================
+
+    def clean_text(
+        self,
+        text
+    ):
+
+
+        text = text.strip()
+
+
+        text = re.sub(
+            r"\n{3,}",
+            "\n\n",
+            text
+        )
+
+
+        return text
+
 
 
 context_compressor = ContextCompressor()

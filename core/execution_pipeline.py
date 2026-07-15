@@ -28,6 +28,7 @@ class ExecutionPipeline:
 
         self.validator = Validator()
 
+
     def execute(
         self,
         command
@@ -36,6 +37,7 @@ class ExecutionPipeline:
         if command.plan:
 
             command.plan.status = "running"
+
 
         try:
 
@@ -47,6 +49,7 @@ class ExecutionPipeline:
                 command
             )
 
+
             # ----------------------------------
             # Clean Output
             # ----------------------------------
@@ -54,6 +57,7 @@ class ExecutionPipeline:
             cleaned = OutputCleaner.clean(
                 result
             )
+
 
             # ----------------------------------
             # Validator
@@ -69,11 +73,13 @@ class ExecutionPipeline:
 
             )
 
+
             if validation.get("retry"):
 
                 if command.plan:
 
                     command.plan.status = "retry_required"
+
 
                 return {
 
@@ -87,15 +93,49 @@ class ExecutionPipeline:
 
                 }
 
+
+
             # ----------------------------------
             # Determine Agent Type
             # ----------------------------------
 
-            agent_type = command.target.lower()
+            agent_type = (
+
+                getattr(
+
+                    command,
+
+                    "target",
+
+                    ""
+
+                )
+
+                or ""
+
+            ).lower()
+
+
 
             if not agent_type:
 
-                agent_type = command.action.lower()
+                agent_type = (
+
+                    getattr(
+
+                        command,
+
+                        "action",
+
+                        ""
+
+                    )
+
+                    or ""
+
+                ).lower()
+
+
 
             # ----------------------------------
             # Quality Evaluation
@@ -111,11 +151,13 @@ class ExecutionPipeline:
 
             )
 
+
             if quality.get("retry"):
 
                 if command.plan:
 
                     command.plan.status = "retry_required"
+
 
                 return {
 
@@ -129,6 +171,8 @@ class ExecutionPipeline:
 
                 }
 
+
+
             # ----------------------------------
             # Success
             # ----------------------------------
@@ -136,6 +180,7 @@ class ExecutionPipeline:
             if command.plan:
 
                 command.plan.complete()
+
 
             return {
 
@@ -149,13 +194,19 @@ class ExecutionPipeline:
 
             }
 
+
+
         except Exception as e:
 
+
             traceback.print_exc()
+
 
             if command.plan:
 
                 command.plan.status = "failed"
+
+
 
             return {
 
@@ -182,6 +233,7 @@ class ExecutionPipeline:
                 "status": "failed"
 
             }
+
 
 
 pipeline = ExecutionPipeline()

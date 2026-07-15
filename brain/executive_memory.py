@@ -1,6 +1,10 @@
+from datetime import datetime
+
+
 class ExecutiveMemory:
+
     """
-    Arman Executive Memory
+    Arman StudioOS Executive Memory
 
     Stores:
 
@@ -9,12 +13,16 @@ class ExecutiveMemory:
     - Current Step
     - Running Tasks
     - Completed Tasks
+    - Failed Tasks
     - Last Execution
     """
+
 
     def __init__(self):
 
         self.reset()
+
+
 
     # ---------------------------------
     # Reset
@@ -28,15 +36,23 @@ class ExecutiveMemory:
 
         self.current_workflow = None
 
+
         self.running_tasks = []
 
         self.completed_tasks = []
+
+        self.failed_tasks = []
+
 
         self.last_agent = None
 
         self.last_provider = None
 
         self.last_result = None
+
+        self.last_execution_time = None
+
+
 
     # ---------------------------------
     # Goal
@@ -49,6 +65,8 @@ class ExecutiveMemory:
 
         self.goal = goal
 
+
+
     # ---------------------------------
     # Workflow
     # ---------------------------------
@@ -59,6 +77,8 @@ class ExecutiveMemory:
     ):
 
         self.current_workflow = workflow
+
+
 
     # ---------------------------------
     # Step
@@ -71,6 +91,8 @@ class ExecutiveMemory:
 
         self.current_step = step
 
+
+
     # ---------------------------------
     # Tasks
     # ---------------------------------
@@ -80,28 +102,122 @@ class ExecutiveMemory:
         task
     ):
 
-        if task not in self.running_tasks:
+
+        if not self.contains_task(
+            task,
+            self.running_tasks
+        ):
 
             self.running_tasks.append(
                 task
             )
+
+
 
     def complete_task(
         self,
         task
     ):
 
-        if task in self.running_tasks:
 
-            self.running_tasks.remove(
-                task
-            )
+        self.remove_task(
+            task,
+            self.running_tasks
+        )
 
-        if task not in self.completed_tasks:
+
+        if not self.contains_task(
+            task,
+            self.completed_tasks
+        ):
 
             self.completed_tasks.append(
                 task
             )
+
+
+
+    def fail_task(
+        self,
+        task
+    ):
+
+
+        self.remove_task(
+            task,
+            self.running_tasks
+        )
+
+
+        if not self.contains_task(
+            task,
+            self.failed_tasks
+        ):
+
+            self.failed_tasks.append(
+                task
+            )
+
+
+
+    def remove_task(
+        self,
+        task,
+        collection
+    ):
+
+
+        for item in collection[:]:
+
+            if self.task_equal(
+                item,
+                task
+            ):
+
+                collection.remove(
+                    item
+                )
+
+
+
+    def contains_task(
+        self,
+        task,
+        collection
+    ):
+
+
+        return any(
+
+            self.task_equal(
+                item,
+                task
+            )
+
+            for item in collection
+
+        )
+
+
+
+    def task_equal(
+        self,
+        a,
+        b
+    ):
+
+
+        return (
+
+            getattr(a, "name", None)
+
+            ==
+
+            getattr(b, "name", None)
+
+        )
+
+
 
     # ---------------------------------
     # Execution
@@ -119,11 +235,28 @@ class ExecutiveMemory:
 
     ):
 
+
         self.last_agent = agent
 
         self.last_provider = provider
 
-        self.last_result = result
+
+        if result:
+
+            self.last_result = str(result)[:3000]
+
+        else:
+
+            self.last_result = None
+
+
+
+        self.last_execution_time = (
+            datetime.now()
+            .isoformat()
+        )
+
+
 
     # ---------------------------------
     # Snapshot
@@ -131,43 +264,87 @@ class ExecutiveMemory:
 
     def snapshot(self):
 
+
         return {
+
 
             "goal": self.goal,
 
+
             "current_step": self.current_step,
+
 
             "current_workflow": self.current_workflow,
 
+
+
             "running_tasks": [
 
-                getattr(t, "name", str(t))
+                getattr(
+                    t,
+                    "name",
+                    str(t)
+                )
 
                 for t in self.running_tasks
 
             ],
 
+
+
             "completed_tasks": [
 
-                getattr(t, "name", str(t))
+                getattr(
+                    t,
+                    "name",
+                    str(t)
+                )
 
                 for t in self.completed_tasks
 
             ],
 
+
+
+            "failed_tasks": [
+
+                getattr(
+                    t,
+                    "name",
+                    str(t)
+                )
+
+                for t in self.failed_tasks
+
+            ],
+
+
+
             "last_agent": self.last_agent,
+
 
             "last_provider": self.last_provider,
 
-            "last_result": self.last_result
+
+            "last_result": self.last_result,
+
+
+            "last_execution_time":
+                self.last_execution_time
+
 
         }
 
-    # سازگاری با نسخه‌های قبلی
+
+
+    # ---------------------------------
+    # Backward Compatibility
+    # ---------------------------------
 
     def state(self):
 
         return self.snapshot()
+
 
 
 executive_memory = ExecutiveMemory()

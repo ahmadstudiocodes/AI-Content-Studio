@@ -1,24 +1,128 @@
+from datetime import datetime
+
+
 class ShortTermMemory:
 
-    def __init__(self, limit=20):
+    """
+    Arman StudioOS Short Term Memory
 
-        self.limit = limit
+    Stores recent interactions
+    with limited history size.
+    """
+
+
+
+    def __init__(
+        self,
+        limit=20
+    ):
+
+        self.limit = max(
+            1,
+            limit
+        )
+
         self.memory = []
 
-    def add(self, role, content):
 
-        self.memory.append({
-            "role": role,
-            "content": content
-        })
 
-        if len(self.memory) > self.limit:
+    # ==================================================
+
+    def add(
+        self,
+        role,
+        content
+    ):
+
+
+        if content is None:
+
+            return
+
+
+
+        content = str(
+            content
+        ).strip()
+
+
+
+        if not content:
+
+            return
+
+
+
+        item = {
+
+            "role":
+                str(role or "unknown"),
+
+
+            "content":
+                content,
+
+
+            "timestamp":
+                datetime.now().isoformat()
+
+        }
+
+
+
+        self.memory.append(
+            item
+        )
+
+
+
+        self.trim()
+
+
+
+    # ==================================================
+
+    def trim(
+        self
+    ):
+
+
+        while len(self.memory) > self.limit:
+
             self.memory.pop(0)
 
-    def get(self):
 
-        return self.memory
 
-    def clear(self):
+    # ==================================================
 
-        self.memory.clear()
+    def get(
+        self
+    ):
+
+
+        return list(
+            self.memory
+        )
+
+
+
+    # ==================================================
+
+    def latest(
+        self,
+        count=5
+    ):
+
+
+        return self.memory[-count:]
+
+
+
+    # ==================================================
+
+    def clear(
+        self
+    ):
+
+
+        self.memory = []

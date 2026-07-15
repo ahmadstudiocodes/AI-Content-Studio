@@ -1,73 +1,236 @@
 from agents.base.base_llm_agent import BaseLLMAgent
 
 
-class CourseAgent(BaseLLMAgent):
 
-    def __init__(self, provider):
+class CourseAgent(BaseLLMAgent):
+    """
+    Arman StudioOS
+
+    Professional Course Design Agent
+
+
+    Responsibilities:
+
+    - Course architecture
+    - Lesson planning
+    - Learning path
+    - Exercises
+    - Educational structure
+    """
+
+
+
+    VERSION = "1.0.0"
+
+
+
+    def __init__(
+        self,
+        provider
+    ):
+
 
         super().__init__(
+
             name="course",
-            description="Professional Course Design Agent",
+
+            description=
+            "Professional Course Creation Agent",
+
             provider=provider,
+
             system_prompt="""
+
 You are Arman StudioOS Course Agent.
 
-Your ONLY responsibility is designing professional educational courses.
+Your responsibility is designing educational courses.
 
 Focus on:
 
-- Course Structure
-- Learning Path
-- Module Planning
-- Lesson Sequence
-- Learning Objectives
-- Prerequisites
+- Learning objectives
+- Course structure
+- Lessons
+- Exercises
+- Projects
+- Student progression
 
-Never generate:
 
-- Scripts
-- Thumbnails
-- SEO
-- Research
-- Marketing
+Never:
+
+- Write marketing content
+- Generate thumbnails
+- Perform SEO optimization
+
 """
+
         )
 
-        self.version = "1.0"
 
-        self.priority = 90
+
+        self.priority = 80
+
+
 
         self.domains = [
+
             "education",
+
             "course",
+
             "training"
+
         ]
+
+
 
         self.capabilities = [
+
             "course_design",
-            "curriculum",
-            "lesson_plan",
-            "learning_path"
+
+            "lesson_planning",
+
+            "learning_path",
+
+            "exercise_creation"
+
         ]
 
-    def build_prompt(self, user_input):
+
+
+    # =====================================================
+    # Capability
+    # =====================================================
+
+
+    def has_capability(
+        self,
+        capability
+    ):
+
+        return capability in self.capabilities
+
+
+
+    # =====================================================
+    # Dispatcher
+    # =====================================================
+
+
+    def can_handle(
+        self,
+        user_input
+    ):
+
+
+        text = str(
+            user_input
+        ).lower()
+
+
+
+        keywords = [
+
+            "course",
+
+            "دوره",
+
+            "آموزش",
+
+            "درس",
+
+            "فصل",
+
+            "تمرین",
+
+            "کلاس"
+
+        ]
+
+
+
+        return any(
+
+            key in text
+
+            for key in keywords
+
+        )
+
+
+
+    # =====================================================
+    # Prompt Builder
+    # =====================================================
+
+
+    def build_prompt(
+        self,
+        user_input
+    ):
+
 
         return f"""
+
 {self.system_prompt}
+
 
 USER REQUEST:
 
 {user_input}
 
+
+
+Required Structure:
+
+
+# Course Overview
+
+
+# Target Students
+
+
+# Learning Objectives
+
+
+# Course Modules
+
+
+# Lessons Breakdown
+
+
+# Exercises
+
+
+# Final Project
+
+
+# Learning Path
+
+
+
 Rules:
 
-- Design a complete professional course.
-- Organize content into logical modules.
-- Define learning objectives.
-- Include prerequisites when needed.
-- Do not write lesson scripts.
-- Do not create thumbnails.
-- Do not perform research.
+- Answer in Persian.
+- Create practical educational structures.
+- Consider student progression.
 
-Answer ONLY in Persian.
 """
+
+
+
+    # =====================================================
+    # Post Processing
+    # =====================================================
+
+
+    def postprocess(
+        self,
+        response,
+        user_input=None
+    ):
+
+
+        return super().postprocess(
+            response,
+            user_input
+        )

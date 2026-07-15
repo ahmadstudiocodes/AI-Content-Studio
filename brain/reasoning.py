@@ -8,11 +8,21 @@ from brain.types import (
 class ReasoningEngine:
 
     """
-    Brain Reasoning Engine
+    Arman StudioOS Brain Reasoning Engine
 
-    Responsible for deciding how Arman
-    should execute a user request.
+    Decides execution strategy:
+
+        User Command
+              |
+              ↓
+        Complexity Analysis
+              |
+        ----------------
+        |              |
+      Direct       Workflow
+
     """
+
 
     COMPLEX_KEYWORDS = [
 
@@ -21,76 +31,128 @@ class ReasoningEngine:
         "book",
         "project",
         "workflow",
-        "multiple",
-        "multi",
         "campaign",
         "pipeline",
-        "system"
+
+        "multiple",
+        "multi step",
+        "multi-step",
+
+        "architecture",
+        "system design",
+
+        "generate all",
+        "create plan",
+        "complete strategy",
+
+        "دوره",
+        "سری",
+        "پروژه",
+        "کمپین",
+        "فرایند",
+        "روند"
 
     ]
 
 
-    def think(self, command):
+    WORKFLOW_INDICATORS = [
 
-        # --------------------------------
-        # Build Clean Goal
-        # --------------------------------
+        "then",
+        "after",
+        "next",
+        "step",
+        "مرحله",
+        "بعد",
+        "سپس"
+
+    ]
+
+
+    # ==================================================
+
+    def think(
+        self,
+        command
+    ):
+
 
         parts = []
 
 
-        if command.action:
-            parts.append(command.action)
+        action = getattr(
+            command,
+            "action",
+            ""
+        )
 
 
-        if command.target:
-            parts.append(command.target)
+        target = getattr(
+            command,
+            "target",
+            ""
+        )
 
 
-        # SAFE PAYLOAD HANDLING
-        payload = (
-            command.payload or ""
-        ).strip()
+        payload = getattr(
+            command,
+            "payload",
+            ""
+        )
 
 
 
-        if (
-            command.target
-            and payload.lower().startswith(
-                command.target.lower()
+        if action:
+
+            parts.append(
+                str(action)
             )
-        ):
 
-            payload = payload[
-                len(command.target):
-            ].strip()
+
+
+        if target:
+
+            parts.append(
+                str(target)
+            )
 
 
 
         if payload:
-            parts.append(payload)
+
+            payload = str(payload).strip()
 
 
 
-        text = " ".join(parts).lower()
+            if target and payload.lower().startswith(
+                str(target).lower()
+            ):
+
+                payload = payload[
+                    len(target):
+                ].strip()
 
 
 
-        # --------------------------------
-        # Complexity Detection
-        # --------------------------------
+            parts.append(
+                payload
+            )
 
-        is_complex = any(
 
-            keyword in text
 
-            for keyword in self.COMPLEX_KEYWORDS
+        text = self.normalize(
+            " ".join(parts)
+        )
 
+
+
+        is_complex = self.detect_complexity(
+            text
         )
 
 
 
         if is_complex:
+
 
             return ReasoningResult(
 
@@ -125,6 +187,71 @@ class ReasoningEngine:
             execution=ExecutionMode.DIRECT
 
         )
+
+
+
+    # ==================================================
+
+    def detect_complexity(
+        self,
+        text
+    ):
+
+
+        keyword_match = any(
+
+            keyword in text
+
+            for keyword in self.COMPLEX_KEYWORDS
+
+        )
+
+
+        workflow_match = any(
+
+            indicator in text
+
+            for indicator in self.WORKFLOW_INDICATORS
+
+        )
+
+
+        return (
+            keyword_match
+            or workflow_match
+        )
+
+
+
+    # ==================================================
+
+    def normalize(
+        self,
+        text
+    ):
+
+
+        text = text.lower()
+
+
+        replacements = {
+
+            "‌": "",
+            "ي": "ی",
+            "ك": "ک"
+
+        }
+
+
+        for old, new in replacements.items():
+
+            text = text.replace(
+                old,
+                new
+            )
+
+
+        return text.strip()
 
 
 

@@ -1,78 +1,114 @@
 from agents.base.base_llm_agent import BaseLLMAgent
 
 
-class PublishingAgent(BaseLLMAgent):
+class PublishAgent(BaseLLMAgent):
 
     def __init__(self, provider):
 
         super().__init__(
             name="publish",
-            description="Workflow Publishing Agent",
+            description="YouTube Publishing Assets Agent",
             provider=provider,
             system_prompt="""
-You are Arman StudioOS Publishing Agent.
+You are Arman StudioOS Publish Agent.
 
-Prepare ONLY YouTube publishing assets.
+Your ONLY responsibility is preparing YouTube publishing assets.
+
+Focus on:
+
+- SEO metadata
+- Description
+- Tags
+- Hashtags
+- Publishing strategy
+- Audience engagement
 
 Never:
+
 - Rewrite scripts
 - Create thumbnails
-- Redesign courses
+- Design courses
+- Perform research
+- Generate video ideas
 """
         )
 
-        self.version = "2.1"
+
+        self.version = "2.2"
+
 
         self.priority = 70
 
+
         self.domains = [
-            "youtube",
+
+            "publish",
             "publishing",
-            "marketing"
+            "youtube",
+            "seo"
+
         ]
+
 
         self.capabilities = [
+
             "publishing",
             "seo",
-            "youtube_metadata"
+            "youtube_metadata",
+            "tags",
+            "description"
+
         ]
 
-    def build_prompt(self, user_input):
+
+
+    def build_prompt(
+        self,
+        user_input
+    ):
 
         return f"""
-{self.system_prompt}
+You are Arman StudioOS Publish Agent.
+
 
 Previous Context:
 
 {user_input}
 
+
 Rules:
 
 - Do NOT rewrite the script.
+- Do NOT create thumbnail concepts.
 - Do NOT redesign the course.
-- Do NOT create thumbnails.
-- Keep the output concise.
-- SEO optimized.
-- High CTR.
+- Create SEO optimized publishing assets.
+- Keep information practical.
+- Use high CTR principles.
+
 
 Return ONLY:
 
+
 # SEO Title
+
 
 # SEO Description
 
+
 # YouTube Tags
+
 
 # Hashtags
 
+
 # Suggested Publish Time
+
 
 # Pinned Comment
 
+
 # Community Post
+
 
 Answer ONLY in Persian.
 """
-
-
-publishing_agent = None
